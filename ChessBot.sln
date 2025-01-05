@@ -1,9 +1,24 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35527.113 d17.12
+VisualStudioVersion = 17.12.35527.113
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChessBot", "ChessBot.csproj", "{E6917F80-FDC4-4492-A520-ADE9551EB6F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChessBot", "ChessBot\ChessBot.csproj", "{E6917F80-FDC4-4492-A520-ADE9551EB6F9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "01 - Core", "01 - Core", "{2C70490A-42F0-4827-9996-3967C0946739}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "02 - Shared", "02 - Shared", "{2A989769-B8AF-4A1E-BFED-94B022F0CD01}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "03 - Apps", "03 - Apps", "{734877D0-97F7-42F4-8DBA-8BDEBDE99E15}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A49F1877-9BAF-4B99-B701-97E2AEEB552F}"
+	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		TextFile1.txt = TextFile1.txt
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ChessBot.Core", "ChessBot.Core\ChessBot.Core.csproj", "{34B7C6D2-9791-4C76-BB90-F2654C652ED4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,8 +30,16 @@ Global
 		{E6917F80-FDC4-4492-A520-ADE9551EB6F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6917F80-FDC4-4492-A520-ADE9551EB6F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6917F80-FDC4-4492-A520-ADE9551EB6F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34B7C6D2-9791-4C76-BB90-F2654C652ED4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34B7C6D2-9791-4C76-BB90-F2654C652ED4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34B7C6D2-9791-4C76-BB90-F2654C652ED4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34B7C6D2-9791-4C76-BB90-F2654C652ED4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E6917F80-FDC4-4492-A520-ADE9551EB6F9} = {734877D0-97F7-42F4-8DBA-8BDEBDE99E15}
+		{34B7C6D2-9791-4C76-BB90-F2654C652ED4} = {2C70490A-42F0-4827-9996-3967C0946739}
 	EndGlobalSection
 EndGlobal
