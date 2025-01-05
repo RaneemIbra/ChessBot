@@ -36,6 +36,36 @@ public class Board
     #endregion
 
     #region Public interface
+    public ChessPiece this[ushort rank, ushort file]
+    {
+        get 
+        {
+            if(rank >= 0 && rank < 8 && file >= 0 && file < 8)
+            {
+                return _board[rank, file];
+            }
+            return ChessPiece.Invalid;
+        }
+        set
+        {
+            if (rank >= 0 && rank < 8 && file >= 0 && file < 8)
+            {
+                _board[rank, file] = value;
+            }
+            throw new ArgumentOutOfRangeException();
+        }
+    }
+    public ChessPiece this[ChessRank rank, ChessFile file]
+    {
+        get
+        {
+            return this[rank.ToIndex(), file.ToIndex()];
+        }
+        set
+        {
+            this[rank.ToIndex(), file.ToIndex()] = value;
+        }
+    }
     public IEnumerable<Move> GetPossibleMoves(BoardPiece boardPiece)
     {
         List<Move> possibleMoves = [.. SingleMoves(boardPiece)];
@@ -139,8 +169,6 @@ public class Board
     #region Private Helpers
     internal void InitPiece(ChessRank rank, ChessFile file, ChessPiece piece, bool unsafeInit = false)
     {
-        ushort bRank = rank.ToIndex();
-        ushort bFile = file.ToIndex();
         if (!unsafeInit)
         {
             var existing = _pieces.FirstOrDefault(a => a.Rank == rank && a.File == file);
@@ -156,14 +184,13 @@ public class Board
             var boardPiece = new BoardPiece { File = file, Rank = rank, ChessPiece = piece };
             _pieces.Add(boardPiece);
         }
-        _board[bRank, bFile] = piece;
+        this[rank, file] = piece;
     }
     #endregion
 
     #region Moves
     private IEnumerable<Move> SingleMoves(BoardPiece piece)
     {
-        // TODO: Apply game logic and calculate all possible moves for the given piece
         ushort bRank = piece.Rank.ToIndex();
         ushort bFile = piece.File.ToIndex();
         if (piece.ChessPiece == ChessPiece.White)
