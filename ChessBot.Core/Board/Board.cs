@@ -210,4 +210,41 @@ public class Board
             }
         }
     }
+
+    public void Setup(IEnumerable<string> setupParts)
+    {
+        foreach(var part in setupParts)
+        {
+            ChessPiece piece = ChessPiece.White;
+            var cPart = part.ToLower();
+            if(cPart.Length != 3)
+            {
+                throw new InvalidDataException($"Setup part '{part}' is malformed");
+            }
+            if(cPart[0] == 'w' || cPart[0] == 'b')
+            {
+                if (cPart[0] == 'b')
+                {
+                    piece = ChessPiece.Black;
+                }
+            }
+            else
+            {
+                throw new InvalidDataException($"Setup part '{part}' is malformed");
+            }
+            var filePart = cPart[1];
+            if(filePart < 'a' || filePart > 'h')
+            {
+                throw new InvalidDataException($"Setup part '{part}' is malformed");
+            }
+            ChessFile file = (ChessFile)(filePart - 'a');
+            var rankPart = cPart[2];
+            if(rankPart < '1' || rankPart > '8')
+            {
+                throw new InvalidDataException($"Setup part '{part}' is malformed");
+            }
+            ChessRank rank = (ChessRank)(rankPart - '1' + 1);
+            InitPiece(rank, file, piece);
+        }
+    }
 }
