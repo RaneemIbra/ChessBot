@@ -17,4 +17,12 @@ namespace ChessBot.Core.Board
         Seven = 7,
         Eight = 8
     }
+
+    public static class ChessRankExtension
+    {
+        public static ushort ToIndex(this ChessRank rank)
+        {
+            return (ushort)(rank - 1);
+        }
+    }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,5 +17,13 @@ namespace ChessBot.Core.Board
         F = 5, 
         G = 6, 
         H = 7
+    }
+
+    public static class ChessFilExtension
+    {
+        public static ushort ToIndex(this ChessFile file)
+        {
+            return (ushort)file;
+        }
     }
 }

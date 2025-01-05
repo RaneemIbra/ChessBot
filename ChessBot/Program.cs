@@ -13,7 +13,7 @@ namespace MyApp
             bool whitesTurn = true;
             while(true)
             {
-                board.Print();
+                board.PrintBoard();
                 IEnumerable<BoardPiece> currentPieces = board.WhitePieces;
                 if (whitesTurn)
                 {
@@ -42,7 +42,7 @@ namespace MyApp
                 index = 0;
                 foreach (var move in moves)
                 {
-                    Console.WriteLine($"[{index++}] {move.TargetFile}{(ushort)move.TargetRank}");
+                    Console.WriteLine($"[{index++}] {move.TargetFile}{(ushort)move.TargetRank} - {move.MoveCommand}");
                 }
                 var moveIndex = -1;
                 while(!(moveIndex >= 0 && moveIndex < moves.Count()))
