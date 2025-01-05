@@ -1,11 +1,12 @@
 ﻿
 
+using System.IO.Pipelines;
 using ChessBot.Core.Board;
 
 public class Move
 {
     public required BoardPiece MovingPiece { get; set; }
-    public BoardPiece? DefeatedPiece { get; set; }
+    public BoardPiece? CapturedPiece { get; set; }
     public ChessRank TargetRank { get; set; }
     public ChessFile TargetFile { get; set; }
 }
@@ -28,12 +29,124 @@ public class Board
         InitEmptyBoard();
     }
 
-
-    public IEnumerable<Move> GetPossibleMoves(BoardPiece piece)
+    public IEnumerable<Move> SingleMoves(BoardPiece piece)
     {
         // TODO: Apply game logic and calculate all possible moves for the given piece
+        ushort bRank = RankToIndex(piece.Rank);
+        ushort bFile = FileToIndex(piece.File);
+        if (piece.ChessPiece == ChessPiece.White)
+        {
+            if(bRank + 1 < 8)
+            {
+                if (_board[bRank + 1, bFile] == ChessPiece.Empty)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File };
+                }
+            }
+        }
+        else if (piece.ChessPiece == ChessPiece.Black)
+        {
+            if(bRank - 1 >= 0)
+            {
+                if (_board[bRank - 1, bFile] == ChessPiece.Empty)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File };
+                }
+            }
+        }
+    }
 
-        return new List<Move>();
+    public IEnumerable<Move> DoubleMove(BoardPiece piece)
+    {
+        if (piece.ChessPiece == ChessPiece.White && piece.Rank == ChessRank.Two)
+        {
+            // Check if the piece can move two steps forward
+            if (_board[RankToIndex(piece.Rank) + 1, FileToIndex(piece.File)] == ChessPiece.Empty && _board[RankToIndex(piece.Rank) + 2, FileToIndex(piece.File)] == ChessPiece.Empty)
+            {
+                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 2, TargetFile = piece.File };
+            }
+        }
+        else if (piece.ChessPiece == ChessPiece.Black && piece.Rank == ChessRank.Seven)
+        {
+            // Check if the piece can move two steps forward
+            if (_board[RankToIndex(piece.Rank) - 1, FileToIndex(piece.File)] == ChessPiece.Empty && _board[RankToIndex(piece.Rank) - 2, FileToIndex(piece.File)] == ChessPiece.Empty)
+            {
+                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 2, TargetFile = piece.File };
+            }
+        }
+    }
+    public IEnumerable<Move> CapturingMove(BoardPiece piece)
+    {
+        ushort bRank = RankToIndex(piece.Rank);
+        ushort bFile = FileToIndex(piece.File);
+        if (piece.ChessPiece == ChessPiece.White)
+        {
+            if(bRank + 1 < 8)
+            {
+                if(bFile + 1 < 8 && _board[bRank + 1, bFile + 1] == ChessPiece.Black)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPiece(piece.Rank + 1, piece.File + 1) };
+                }
+                if (bFile - 1 >= 0 && _board[bRank + 1, bFile - 1] == ChessPiece.Black)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPiece(piece.Rank + 1, piece.File - 1) };
+                }
+            }
+            // Check if the piece can move two steps forward
+        }
+        else if (piece.ChessPiece == ChessPiece.Black)
+        {
+            if (bRank - 1 >= 0)
+            {
+                if (bFile + 1 < 8 && _board[bRank - 1, bFile + 1] == ChessPiece.White)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPiece(piece.Rank - 1, piece.File + 1) };
+                }
+                if (bFile - 1 >= 0 && _board[bRank - 1, bFile - 1] == ChessPiece.White)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPiece(piece.Rank - 1, piece.File - 1) };
+                }
+            }
+        }
+    }
+
+    public IEnumerable<Move> enPassent(BoardPiece piece)
+    {
+        ushort bRank = RankToIndex(piece.Rank);
+        ushort bFile = FileToIndex(piece.File);
+        if(piece.ChessPiece == ChessPiece.White)
+        {
+            if (bRank == 4)
+            {
+                if (bFile + 1 < 8 && _board[bRank, bFile + 1] == ChessPiece.Black)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPiece(piece.Rank, piece.File + 1) };
+                }
+                if (bFile - 1 >= 0 && _board[bRank, bFile - 1] == ChessPiece.Black)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPiece(piece.Rank, piece.File - 1) };
+                }
+            }
+        }
+        else if (piece.ChessPiece == ChessPiece.Black)
+        {
+            if (bRank == 3)
+            {
+                if (bFile + 1 < 8 && _board[bRank, bFile + 1] == ChessPiece.White)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPiece(piece.Rank, piece.File + 1) };
+                }
+                if (bFile - 1 >= 0 && _board[bRank, bFile - 1] == ChessPiece.White)
+                {
+                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPiece(piece.Rank, piece.File - 1) };
+                }
+            }
+        }
+    }
+
+    public BoardPiece GetPiece(ChessRank rank, ChessFile file)
+    {
+        return _pieces.Single(a => a.Rank == rank && a.File == file);
     }
 
     public Board CrateBoardFromMove(Move execute)
@@ -77,12 +190,12 @@ public class Board
         {
             foreach(var piece in WhitePieces)
             {
-                var moves = GetPossibleMoves(piece);
-                foreach(var move in moves)
-                {
-                    // Create a new leef in the tree
-                    // leef -> Execute -> do again
-                }
+                //var moves = GetPossibleMoves(piece);
+                //foreach(var move in moves)
+                //{
+                //    // Create a new leef in the tree
+                //    // leef -> Execute -> do again
+                //}
             }
         }
     }
