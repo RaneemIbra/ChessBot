@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 namespace MyApp
 {
@@ -10,6 +11,26 @@ namespace MyApp
             var setupParts = setupString.Split(" ");
             var board = new Board();
             board.Setup(setupParts);
+
+            Stopwatch sw = Stopwatch.StartNew();
+            HashSet<Board> cloneBoards = new();
+            int copyAmount = 10000000;
+            for (int i= 1; i <= copyAmount; i++)
+            {
+                var nBoard = board.Clone();
+                if(i % 1000 == 0)
+                {
+                    sw.Stop();
+                    cloneBoards.Add(nBoard);
+                    Console.Clear();
+                    Console.WriteLine($"Cloning board {copyAmount} times");
+                    Console.WriteLine($"{sw.ElapsedMilliseconds} ms / {i} of {copyAmount} / {(sw.ElapsedMilliseconds / (decimal)i).ToString("0.00000")} ms per clone");
+                    sw.Start();
+                }
+                
+            }
+
+
             bool whitesTurn = true;
             while(true)
             {
