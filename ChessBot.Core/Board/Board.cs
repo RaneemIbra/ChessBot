@@ -36,6 +36,40 @@ public class Board
     #endregion
 
     #region Public interface
+
+    public ChessPiece this[int rank, int file]
+    {
+        get
+        {
+            if (rank >= 0 && rank < 8 && file >= 0 && file < 8)
+            {
+                return _board[rank, file];
+            }
+            return ChessPiece.Invalid;
+        }
+        set
+        {
+            if (rank >= 0 && rank < 8 && file >= 0 && file < 8)
+            {
+                _board[rank, file] = value;
+            }
+            else
+            {
+                throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+    public ChessPiece this[ChessRank rank, ChessFile file]
+    {
+        get
+        {
+            return this[rank.ToIndex(), file.ToIndex()];
+        }
+        set
+        {
+            this[rank.ToIndex(), file.ToIndex()] = value;
+        }
+    }
     public IEnumerable<Move> GetPossibleMoves(BoardPiece boardPiece)
     {
         List<Move> possibleMoves = [.. SingleMoves(boardPiece)];
@@ -55,15 +89,15 @@ public class Board
 
     public void Setup(IEnumerable<string> setupParts)
     {
-        foreach(var part in setupParts)
+        foreach (var part in setupParts)
         {
             ChessPiece piece = ChessPiece.White;
             var cPart = part.ToLower();
-            if(cPart.Length != 3)
+            if (cPart.Length != 3)
             {
                 throw new InvalidDataException($"Setup part '{part}' is malformed");
             }
-            if(cPart[0] == 'w' || cPart[0] == 'b')
+            if (cPart[0] == 'w' || cPart[0] == 'b')
             {
                 if (cPart[0] == 'b')
                 {
@@ -75,13 +109,13 @@ public class Board
                 throw new InvalidDataException($"Setup part '{part}' is malformed");
             }
             var filePart = cPart[1];
-            if(filePart < 'a' || filePart > 'h')
+            if (filePart < 'a' || filePart > 'h')
             {
                 throw new InvalidDataException($"Setup part '{part}' is malformed");
             }
             ChessFile file = (ChessFile)(filePart - 'a');
             var rankPart = cPart[2];
-            if(rankPart < '1' || rankPart > '8')
+            if (rankPart < '1' || rankPart > '8')
             {
                 throw new InvalidDataException($"Setup part '{part}' is malformed");
             }
@@ -89,7 +123,7 @@ public class Board
             InitPiece(rank, file, piece);
         }
     }
-    
+
     public void ExecuteMove(Move move)
     {
         // TODO: impelment
@@ -99,13 +133,13 @@ public class Board
     {
         Console.WriteLine("   | A | B | C | D | E | F | G | H |");
         Console.WriteLine("   |-------------------------------|");
-        foreach(ChessRank rank in Enum.GetValues<ChessRank>().Reverse())
+        foreach (ChessRank rank in Enum.GetValues<ChessRank>().Reverse())
         {
             Console.Write($" {(ushort)rank} |");
-            foreach(ChessFile file in Enum.GetValues<ChessFile>())
+            foreach (ChessFile file in Enum.GetValues<ChessFile>())
             {
                 var chessPiece = _board[rank.ToIndex(), file.ToIndex()];
-                switch(chessPiece)
+                switch (chessPiece)
                 {
                     case ChessPiece.Empty:
                         Console.Write("   |");
@@ -117,7 +151,7 @@ public class Board
                         Console.Write(" B |");
                         break;
                 }
-                
+
             }
             Console.Write($" {(ushort)rank} {Environment.NewLine}");
         }
@@ -139,8 +173,6 @@ public class Board
     #region Private Helpers
     internal void InitPiece(ChessRank rank, ChessFile file, ChessPiece piece, bool unsafeInit = false)
     {
-        ushort bRank = rank.ToIndex();
-        ushort bFile = file.ToIndex();
         if (!unsafeInit)
         {
             var existing = _pieces.FirstOrDefault(a => a.Rank == rank && a.File == file);
@@ -156,7 +188,7 @@ public class Board
             var boardPiece = new BoardPiece { File = file, Rank = rank, ChessPiece = piece };
             _pieces.Add(boardPiece);
         }
-        _board[bRank, bFile] = piece;
+        this[rank, file] = piece;
     }
     #endregion
 
@@ -197,7 +229,7 @@ public class Board
         if (piece.ChessPiece == ChessPiece.White && piece.Rank == ChessRank.Two)
         {
             // Check if the piece can move two steps forward
-            if (_board[bRank + 1, bFile] == ChessPiece.Empty && _board[bRank + 2, bFile] == ChessPiece.Empty)
+            if (this[bRank + 1, bFile] == ChessPiece.Empty && this[bRank + 2, bFile] == ChessPiece.Empty)
             {
                 yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 2, TargetFile = piece.File };
             }
@@ -205,7 +237,7 @@ public class Board
         else if (piece.ChessPiece == ChessPiece.Black && piece.Rank == ChessRank.Seven)
         {
             // Check if the piece can move two steps forward
-            if (_board[bRank - 1, bFile] == ChessPiece.Empty && _board[bRank - 2, bFile] == ChessPiece.Empty)
+            if (this[bRank - 1, bFile] == ChessPiece.Empty && this[bRank - 2, bFile] == ChessPiece.Empty)
             {
                 yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 2, TargetFile = piece.File };
             }
@@ -217,30 +249,25 @@ public class Board
         ushort bFile = piece.File.ToIndex();
         if (piece.ChessPiece == ChessPiece.White)
         {
-            if (bRank + 1 < 8)
+            if (this[bRank + 1, bFile + 1] == ChessPiece.Black)
             {
-                if (bFile + 1 < 8 && _board[bRank + 1, bFile + 1] == ChessPiece.Black)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank + 1, piece.File + 1) };
-                }
-                if (bFile - 1 >= 0 && _board[bRank + 1, bFile - 1] == ChessPiece.Black)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank + 1, piece.File - 1) };
-                }
+                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank + 1, piece.File + 1) };
             }
+            if (this[bRank + 1, bFile - 1] == ChessPiece.Black)
+            {
+                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank + 1, piece.File - 1) };
+            }
+
         }
         else if (piece.ChessPiece == ChessPiece.Black)
         {
-            if (bRank - 1 >= 0)
+            if (this[bRank - 1, bFile + 1] == ChessPiece.White)
             {
-                if (bFile + 1 < 8 && _board[bRank - 1, bFile + 1] == ChessPiece.White)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank - 1, piece.File + 1) };
-                }
-                if (bFile - 1 >= 0 && _board[bRank - 1, bFile - 1] == ChessPiece.White)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank - 1, piece.File - 1) };
-                }
+                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank - 1, piece.File + 1) };
+            }
+            if (this[bRank - 1, bFile - 1] == ChessPiece.White)
+            {
+                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank - 1, piece.File - 1) };
             }
         }
     }
@@ -252,11 +279,11 @@ public class Board
         {
             if (bRank == 4)
             {
-                if (bFile + 1 < 8 && _board[bRank, bFile + 1] == ChessPiece.Black)
+                if (bFile + 1 < 8 && this[bRank, bFile + 1] == ChessPiece.Black)
                 {
                     yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File + 1) };
                 }
-                if (bFile - 1 >= 0 && _board[bRank, bFile - 1] == ChessPiece.Black)
+                if (bFile - 1 >= 0 && this[bRank, bFile - 1] == ChessPiece.Black)
                 {
                     yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File - 1) };
                 }
@@ -266,11 +293,11 @@ public class Board
         {
             if (bRank == 3)
             {
-                if (bFile + 1 < 8 && _board[bRank, bFile + 1] == ChessPiece.White)
+                if (this[bRank, bFile + 1] == ChessPiece.White)
                 {
                     yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File + 1) };
                 }
-                if (bFile - 1 >= 0 && _board[bRank, bFile - 1] == ChessPiece.White)
+                if (this[bRank, bFile - 1] == ChessPiece.White)
                 {
                     yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File - 1) };
                 }
