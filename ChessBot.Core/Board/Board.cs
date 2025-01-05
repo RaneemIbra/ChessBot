@@ -1,5 +1,6 @@
 ﻿
 
+using System.Collections.Generic;
 using System.IO.Pipelines;
 using ChessBot.Core.Board;
 
@@ -29,6 +30,18 @@ public class Board
         InitEmptyBoard();
     }
 
+    public IEnumerable<Move> GetPossibleMoves(BoardPiece boardPiece)
+    {
+        List<Move> possibleMoves = new List<Move>();
+        possibleMoves.AddRange(SingleMoves(boardPiece));
+        if (possibleMoves.Count > 0)
+        {
+            possibleMoves.AddRange(DoubleMove(boardPiece));
+        }
+        possibleMoves.AddRange(CapturingMove(boardPiece));
+        possibleMoves.AddRange(EnPassent(boardPiece));
+        return possibleMoves;
+    }
     public IEnumerable<Move> SingleMoves(BoardPiece piece)
     {
         // TODO: Apply game logic and calculate all possible moves for the given piece
@@ -110,7 +123,7 @@ public class Board
         }
     }
 
-    public IEnumerable<Move> enPassent(BoardPiece piece)
+    public IEnumerable<Move> EnPassent(BoardPiece piece)
     {
         ushort bRank = RankToIndex(piece.Rank);
         ushort bFile = FileToIndex(piece.File);
@@ -246,5 +259,40 @@ public class Board
             ChessRank rank = (ChessRank)(rankPart - '1' + 1);
             InitPiece(rank, file, piece);
         }
+    }
+    
+    public void ExecuteMove(Move move)
+    {
+        // TODO: impelment
+        Console.WriteLine("Sorry, I don't know how to execute moves :(");
+    }
+    public void Print()
+    {
+        Console.WriteLine("   | A | B | C | D | E | F | G | H |");
+        Console.WriteLine("   |-------------------------------|");
+        foreach(ChessRank rank in Enum.GetValues<ChessRank>().Reverse())
+        {
+            Console.Write($" {(ushort)rank} |");
+            foreach(ChessFile file in Enum.GetValues<ChessFile>())
+            {
+                var chessPiece = _board[RankToIndex(rank), FileToIndex(file)];
+                switch(chessPiece)
+                {
+                    case ChessPiece.Empty:
+                        Console.Write("   |");
+                        break;
+                    case ChessPiece.White:
+                        Console.Write(" W |");
+                        break;
+                    case ChessPiece.Black:
+                        Console.Write(" B |");
+                        break;
+                }
+                
+            }
+            Console.Write($" {(ushort)rank} {Environment.NewLine}");
+        }
+        Console.WriteLine("   |-------------------------------|");
+        Console.WriteLine("   | A | B | C | D | E | F | G | H |");
     }
 }
