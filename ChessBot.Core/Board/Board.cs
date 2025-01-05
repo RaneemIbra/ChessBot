@@ -20,6 +20,19 @@ public class Board
     {
         _board = new ChessPiece[8, 8];
     }
+    public Board Clone()
+    {
+        var copy = new Board();
+        foreach (var bPiece in BlackPieces)
+        {
+            copy.InitPiece(bPiece.Rank, bPiece.File, bPiece.ChessPiece, true);
+        }
+        foreach (var wPiece in WhitePieces)
+        {
+            copy.InitPiece(wPiece.Rank, wPiece.File, wPiece.ChessPiece, true);
+        }
+        return copy;
+    }
     #endregion
 
     #region Public interface
@@ -81,19 +94,6 @@ public class Board
     {
         // TODO: impelment
         Console.WriteLine("Sorry, I don't know how to execute moves :(");
-    }
-    public Board Clone()
-    {
-        var copy = new Board();
-        foreach (var bPiece in BlackPieces)
-        {
-            copy.InitPiece(bPiece.Rank, bPiece.File, bPiece.ChessPiece, true);
-        }
-        foreach (var wPiece in WhitePieces)
-        {
-            copy.InitPiece(wPiece.Rank, wPiece.File, wPiece.ChessPiece, true);
-        }
-        return copy;
     }
     public void PrintBoard()
     {
