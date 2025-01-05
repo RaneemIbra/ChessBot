@@ -163,30 +163,33 @@ public class Board
     #region Moves
     private IEnumerable<Move> SingleMoves(BoardPiece piece)
     {
-        // TODO: Apply game logic and calculate all possible moves for the given piece
-        ushort bRank = piece.Rank.ToIndex();
-        ushort bFile = piece.File.ToIndex();
-        if (piece.ChessPiece == ChessPiece.White)
+        if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
         {
-            if (bRank + 1 < 8)
-            {
-                if (_board[bRank + 1, bFile] == ChessPiece.Empty)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File };
-                }
-            }
+            yield break;
         }
-        else if (piece.ChessPiece == ChessPiece.Black)
+
+        int direction = piece.ChessPiece == ChessPiece.White ? 1 : -1;
+
+        ushort targetRankIndex = (ushort)(piece.Rank.ToIndex() + direction);
+        if (targetRankIndex < 0 || targetRankIndex >= 8)
         {
-            if (bRank - 1 >= 0)
+            yield break;
+        }
+
+        ChessRank targetRank = (ChessRank)(targetRankIndex + 1);
+        ushort currentFile = piece.File.ToIndex();
+
+        if (_board[targetRankIndex, currentFile] == ChessPiece.Empty)
+        {
+            yield return new Move
             {
-                if (_board[bRank - 1, bFile] == ChessPiece.Empty)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File };
-                }
-            }
+                MovingPiece = piece,
+                TargetRank = targetRank,
+                TargetFile = piece.File
+            };
         }
     }
+
     private IEnumerable<Move> DoubleMove(BoardPiece piece)
     {
         ushort bRank = piece.Rank.ToIndex();

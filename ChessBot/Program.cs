@@ -34,7 +34,6 @@ namespace MyApp
                 board.ExecuteMove(cMove);
                 whitesTurn = !whitesTurn;
             }
-
         }
 
         static Move PickMove(IEnumerable<Move> moves)
