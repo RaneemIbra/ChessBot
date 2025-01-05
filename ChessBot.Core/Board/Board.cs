@@ -10,6 +10,7 @@ public class Board
     #region Properties
     public IEnumerable<BoardPiece> BlackPieces => _pieces.Where(w => w.ChessPiece == ChessPiece.Black);
     public IEnumerable<BoardPiece> WhitePieces => _pieces.Where(w => w.ChessPiece == ChessPiece.White);
+    public Move? LastMove { get; private set; }
 
     public int NumOfBlackPieces => BlackPieces.Count();
     public int NumOfWhitePieces => WhitePieces.Count();
@@ -127,6 +128,7 @@ public class Board
     public void ExecuteMove(Move move)
     {
         // TODO: impelment
+        LastMove = move;
         Console.WriteLine("Sorry, I don't know how to execute moves :(");
     }
     public void PrintBoard()
@@ -201,17 +203,11 @@ public class Board
         }
 
         int direction = piece.ChessPiece == ChessPiece.White ? 1 : -1;
-
         ushort targetRankIndex = (ushort)(piece.Rank.ToIndex() + direction);
-        if (targetRankIndex < 0 || targetRankIndex >= 8)
-        {
-            yield break;
-        }
-
         ChessRank targetRank = (ChessRank)(targetRankIndex + 1);
         ushort currentFile = piece.File.ToIndex();
 
-        if (_board[targetRankIndex, currentFile] == ChessPiece.Empty)
+        if (this[targetRankIndex, currentFile] == ChessPiece.Empty)
         {
             yield return new Move
             {
@@ -224,23 +220,24 @@ public class Board
 
     private IEnumerable<Move> DoubleMove(BoardPiece piece)
     {
-        ushort bRank = piece.Rank.ToIndex();
-        ushort bFile = piece.File.ToIndex();
-        if (piece.ChessPiece == ChessPiece.White && piece.Rank == ChessRank.Two)
+        if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
         {
-            // Check if the piece can move two steps forward
-            if (this[bRank + 1, bFile] == ChessPiece.Empty && this[bRank + 2, bFile] == ChessPiece.Empty)
-            {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 2, TargetFile = piece.File };
-            }
+            yield break;
         }
-        else if (piece.ChessPiece == ChessPiece.Black && piece.Rank == ChessRank.Seven)
+
+        int direction = piece.ChessPiece == ChessPiece.White ? 2 : -2;
+        ushort targetRankIndex = (ushort)(piece.Rank.ToIndex() + direction);
+        ChessRank targetRank = (ChessRank)(targetRankIndex + 1);
+        ushort currentFile = piece.File.ToIndex();
+
+        if (this[targetRankIndex, currentFile] == ChessPiece.Empty)
         {
-            // Check if the piece can move two steps forward
-            if (this[bRank - 1, bFile] == ChessPiece.Empty && this[bRank - 2, bFile] == ChessPiece.Empty)
+            yield return new Move
             {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 2, TargetFile = piece.File };
-            }
+                MovingPiece = piece,
+                TargetRank = targetRank,
+                TargetFile = piece.File
+            };
         }
     }
     private IEnumerable<Move> CapturingMove(BoardPiece piece)
@@ -273,33 +270,49 @@ public class Board
     }
     private IEnumerable<Move> EnPassent(BoardPiece piece)
     {
+        if(LastMove == null)
+        {
+            yield break;
+        }
         ushort bRank = piece.Rank.ToIndex();
         ushort bFile = piece.File.ToIndex();
         if (piece.ChessPiece == ChessPiece.White)
         {
-            if (bRank == 4)
+            if (piece.Rank == ChessRank.Five)
             {
-                if (bFile + 1 < 8 && this[bRank, bFile + 1] == ChessPiece.Black)
+                if (this[bRank, bFile + 1] == ChessPiece.Black)
                 {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File + 1) };
+                    if (LastMove.TargetRank == piece.Rank && LastMove.TargetFile == piece.File + 1)
+                    {
+                        yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File + 1) };
+                    }
                 }
-                if (bFile - 1 >= 0 && this[bRank, bFile - 1] == ChessPiece.Black)
+                if (this[bRank, bFile - 1] == ChessPiece.Black)
                 {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File - 1) };
+                    if (LastMove.TargetRank == piece.Rank && LastMove.TargetFile == piece.File - 1)
+                    {
+                        yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File - 1) };
+                    }
                 }
             }
         }
         else if (piece.ChessPiece == ChessPiece.Black)
         {
-            if (bRank == 3)
+            if (piece.Rank == ChessRank.Four)
             {
                 if (this[bRank, bFile + 1] == ChessPiece.White)
                 {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File + 1) };
+                    if (LastMove.TargetRank == piece.Rank && LastMove.TargetFile == piece.File + 1)
+                    {
+                        yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File + 1) };
+                    }
                 }
                 if (this[bRank, bFile - 1] == ChessPiece.White)
                 {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File - 1) };
+                    if (LastMove.TargetRank == piece.Rank && LastMove.TargetFile == piece.File - 1)
+                    {
+                        yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File - 1) };
+                    }
                 }
             }
         }
