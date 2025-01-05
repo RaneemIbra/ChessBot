@@ -2,11 +2,12 @@
 
 using ChessBot.Core.Board;
 
-public class BoardPiece
+public class Move
 {
-    public ChessRank Rank { get; set; }
-    public ChessFile File { get; set; }
-    public ChessPiece ChessPiece { get; set; }
+    public required BoardPiece MovingPiece { get; set; }
+    public BoardPiece? DefeatedPiece { get; set; }
+    public ChessRank TargetRank { get; set; }
+    public ChessFile TargetFile { get; set; }
 }
 
 public class Board
@@ -25,6 +26,19 @@ public class Board
     {
         _board = new ChessPiece[8, 8];
         InitEmptyBoard();
+    }
+
+
+    public IEnumerable<Move> GetPossibleMoves(BoardPiece piece)
+    {
+        // TODO: Apply game logic and calculate all possible moves for the given piece
+
+        return new List<Move>();
+    }
+
+    public Board CrateBoardFromMove(Move execute)
+    {
+        return this; // TODO: Create a deep copy of the board and execute the given move on it
     }
 
     private ushort FileToIndex(ChessFile file)
@@ -54,6 +68,23 @@ public class Board
             _pieces.Add(boardPiece);
         }
         _board[RankToIndex(rank), FileToIndex(file)] = piece;
+    }
+
+    private void GameLoop()
+    {
+        var currentPlayer = "white";
+        if(currentPlayer == "white")
+        {
+            foreach(var piece in WhitePieces)
+            {
+                var moves = GetPossibleMoves(piece);
+                foreach(var move in moves)
+                {
+                    // Create a new leef in the tree
+                    // leef -> Execute -> do again
+                }
+            }
+        }
     }
 
     private void InitEmptyBoard()
