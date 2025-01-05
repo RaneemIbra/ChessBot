@@ -53,7 +53,10 @@ public class Board
             {
                 _board[rank, file] = value;
             }
-            throw new ArgumentOutOfRangeException();
+            else
+            {
+                throw new ArgumentOutOfRangeException();
+            }
         }
     }
     public ChessPiece this[ChessRank rank, ChessFile file]
