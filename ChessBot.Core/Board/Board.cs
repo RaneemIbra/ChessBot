@@ -1,25 +1,68 @@
 ﻿
 
+using ChessBot.Core.Board;
+
+public class BoardPiece
+{
+    public ChessRank Rank { get; set; }
+    public ChessFile File { get; set; }
+    public ChessPiece ChessPiece { get; set; }
+}
+
 public class Board
 {
-    private int[,] board;
-    public int NumOfBlackPieces { get; private set; }
-    public int NumOfWhitePieces { get; private set; }
+    private ChessPiece[,] _board;
+
+    public IEnumerable<BoardPiece> BlackPieces => _pieces.Where(w => w.ChessPiece == ChessPiece.Black);
+    public IEnumerable<BoardPiece> WhitePieces => _pieces.Where(w => w.ChessPiece == ChessPiece.White);
+
+    public int NumOfBlackPieces => BlackPieces.Count();
+    public int NumOfWhitePieces => WhitePieces.Count();
+
+    private List<BoardPiece> _pieces = new List<BoardPiece>();
+
     public Board()
     {
-        board = new int[8, 8];
-        NumOfBlackPieces = 0;
-        NumOfWhitePieces = 0;
-        InitBoard();
+        _board = new ChessPiece[8, 8];
+        InitEmptyBoard();
     }
 
-    private void InitBoard()
+    private ushort FileToIndex(ChessFile file)
     {
-        for (int row = 0; row < 8; row++)
+        return (ushort)file;
+    }
+
+    private ushort RankToIndex(ChessRank rank) 
+    { 
+        return (ushort)(rank - 1); 
+    }
+
+    private void InitPiece(ChessRank rank, ChessFile file, ChessPiece piece)
+    {
+        ushort bRank = RankToIndex(rank);
+        ushort bFile = FileToIndex(file);
+        var existing = _pieces.FirstOrDefault(a => a.Rank == rank && a.File == file);
+        // Check if the piece is valid
+        if (existing != null)
         {
-            for (int col = 0; col < 8; col++)
+            // ... we could also throw an exception here, init shoult not be called with nonsense
+            _pieces.Remove(existing);
+        }
+        if (piece != ChessPiece.Empty)
+        {
+            var boardPiece = new BoardPiece { File = file, Rank = rank, ChessPiece = piece };
+            _pieces.Add(boardPiece);
+        }
+        _board[RankToIndex(rank), FileToIndex(file)] = piece;
+    }
+
+    private void InitEmptyBoard()
+    {
+        foreach(ChessRank rank in Enum.GetValues(typeof(ChessRank)))
+        {
+            foreach(ChessFile file in Enum.GetValues(typeof(ChessFile)))
             {
-                board[row, col] = (int)Piece.Empty;
+                InitPiece(rank, file, ChessPiece.Empty);
             }
         }
     }
