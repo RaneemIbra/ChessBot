@@ -140,7 +140,7 @@ public class Board
             Console.Write($" {(ushort)rank} |");
             foreach (ChessFile file in Enum.GetValues<ChessFile>())
             {
-                var chessPiece = _board[rank.ToIndex(), file.ToIndex()];
+                var chessPiece = this[rank, file];
                 switch (chessPiece)
                 {
                     case ChessPiece.Empty:
