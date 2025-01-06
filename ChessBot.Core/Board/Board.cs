@@ -129,6 +129,7 @@ public class Board
     {
         // TODO: impelment
         LastMove = move;
+        Console.WriteLine("No worries martiniii, i will help you execute the moves");
         Console.WriteLine("Sorry, I don't know how to execute moves :(");
     }
     public void PrintBoard()
