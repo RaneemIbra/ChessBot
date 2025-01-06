@@ -127,10 +127,81 @@ public class Board
 
     public void ExecuteMove(Move move)
     {
-        // TODO: impelment
         LastMove = move;
+        ChessRank CurrentRank = move.MovingPiece.Rank;
+        ChessFile CurrentFile = move.MovingPiece.File;
+        this[move.TargetRank, move.TargetFile] = move.MovingPiece.ChessPiece;
+        this[CurrentRank, CurrentFile] = ChessPiece.Empty;
+        move.MovingPiece.Rank = move.TargetRank;
+        move.MovingPiece.File = move.TargetFile;
+        if (move.CapturedPiece != null)
+        {
+            _pieces.Remove(move.CapturedPiece);
+            this[move.CapturedPiece.Rank, move.CapturedPiece.File] = ChessPiece.Empty;
+        }
+        if (IsEnpassentMove(move))
+        {
+            int direction = move.MovingPiece.ChessPiece == ChessPiece.White ? 1 : -1;
+            ChessRank capturedPawnRank = (ChessRank)(move.TargetRank.ToIndex() + direction);
+            BoardPiece? capturedPawn = GetPieceAt(capturedPawnRank, move.TargetFile);
+            if (capturedPawn != null)
+            {
+                _pieces.Remove(capturedPawn);
+                this[capturedPawnRank, move.TargetFile] = ChessPiece.Empty;
+            }
+        }
+        if(IsGameOver())
+        {
+            return;
+        }
         Console.WriteLine("No worries martiniii, i will help you execute the moves");
         Console.WriteLine("Sorry, I don't know how to execute moves :(");
+    }
+
+    private bool IsEnpassentMove(Move move)
+    {
+        if(LastMove == null || move.CapturedPiece != null)
+        {
+            return false;
+        }
+        int direction = move.MovingPiece.ChessPiece == ChessPiece.White ? 1 : -1;
+        ChessRank EnPassentRank = (ChessRank)(move.TargetRank.ToIndex() + direction);
+        return LastMove.TargetRank == EnPassentRank && LastMove.TargetFile == move.TargetFile;
+    }
+
+    private bool IsGameOver()
+    {
+        if (NumOfBlackPieces == 0)
+        {
+            Console.WriteLine("Game Over! White wins - No black pawns left.");
+            return true;
+        }
+        if (NumOfWhitePieces == 0)
+        {
+            Console.WriteLine("Game Over! Black wins - No white pawns left.");
+            return true;
+        }
+        if (WhitePieces.Any(piece => piece.Rank == ChessRank.Eight))
+        {
+            Console.WriteLine("Game Over! White wins - White pawn reached the last rank.");
+            return true;
+        }
+        if (BlackPieces.Any(piece => piece.Rank == ChessRank.One))
+        {
+            Console.WriteLine("Game Over! Black wins - Black pawn reached the last rank.");
+            return true;
+        }
+        if (!BlackPieces.Any(piece => GetPossibleMoves(piece).Any()))
+        {
+            Console.WriteLine("Game Over! White wins - Black has no valid moves left.");
+            return true;
+        }
+        if (!WhitePieces.Any(piece => GetPossibleMoves(piece).Any()))
+        {
+            Console.WriteLine("Game Over! Black wins - White has no valid moves left.");
+            return true;
+        }
+        return false;
     }
     public void PrintBoard()
     {
