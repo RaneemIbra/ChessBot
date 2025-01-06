@@ -195,6 +195,7 @@ public class Board
     #endregion
 
     #region Moves
+    //i might be wrong in here because the ToIndex() method is not defined to subtract 1
     private IEnumerable<Move> SingleMoves(BoardPiece piece)
     {
         if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
