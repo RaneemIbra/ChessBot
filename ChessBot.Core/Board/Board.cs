@@ -127,30 +127,13 @@ public class Board
 
     public void ExecuteMove(Move move)
     {
-        LastMove = move;
-        ChessRank CurrentRank = move.MovingPiece.Rank;
-        ChessFile CurrentFile = move.MovingPiece.File;
-        this[move.TargetRank, move.TargetFile] = move.MovingPiece.ChessPiece;
-        this[CurrentRank, CurrentFile] = ChessPiece.Empty;
-        move.MovingPiece.Rank = move.TargetRank;
-        move.MovingPiece.File = move.TargetFile;
+        var movedPiece = MovePiece(move.MovingPiece, move.TargetRank, move.TargetFile);
         if (move.CapturedPiece != null)
         {
-            _pieces.Remove(move.CapturedPiece);
-            this[move.CapturedPiece.Rank, move.CapturedPiece.File] = ChessPiece.Empty;
+            RemovePiece(move.CapturedPiece);
         }
-        if (IsEnpassentMove(move))
-        {
-            int direction = move.MovingPiece.ChessPiece == ChessPiece.White ? 1 : -1;
-            ChessRank capturedPawnRank = (ChessRank)(move.TargetRank.ToIndex() + direction);
-            BoardPiece? capturedPawn = GetPieceAt(capturedPawnRank, move.TargetFile);
-            if (capturedPawn != null)
-            {
-                _pieces.Remove(capturedPawn);
-                this[capturedPawnRank, move.TargetFile] = ChessPiece.Empty;
-            }
-        }
-        if(IsGameOver())
+        LastMove = move;
+        if (IsGameOver())
         {
             return;
         }
@@ -158,15 +141,24 @@ public class Board
         Console.WriteLine("Sorry, I don't know how to execute moves :(");
     }
 
-    private bool IsEnpassentMove(Move move)
+    private void RemovePiece(BoardPiece piece)
     {
-        if(LastMove == null || move.CapturedPiece != null)
+        _pieces.Remove(piece);
+        this[piece.Rank, piece.File] = ChessPiece.Empty;
+    }
+
+    private BoardPiece MovePiece(BoardPiece piece, ChessRank targetRank, ChessFile targetFile)
+    {
+        RemovePiece(piece);
+        var newPiece = new BoardPiece
         {
-            return false;
-        }
-        int direction = move.MovingPiece.ChessPiece == ChessPiece.White ? 1 : -1;
-        ChessRank EnPassentRank = (ChessRank)(move.TargetRank.ToIndex() + direction);
-        return LastMove.TargetRank == EnPassentRank && LastMove.TargetFile == move.TargetFile;
+            ChessPiece = piece.ChessPiece,
+            Rank = targetRank,
+            File = targetFile
+        };
+        _pieces.Add(newPiece);
+        this[targetRank, targetFile] = piece.ChessPiece;
+        return newPiece;
     }
 
     private bool IsGameOver()
