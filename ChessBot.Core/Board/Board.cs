@@ -10,6 +10,7 @@ public class Board
     #region Properties
     public IEnumerable<BoardPiece> BlackPieces => _pieces.Where(w => w.ChessPiece == ChessPiece.Black);
     public IEnumerable<BoardPiece> WhitePieces => _pieces.Where(w => w.ChessPiece == ChessPiece.White);
+    public Move? LastMove { get; private set; }
 
     public int NumOfBlackPieces => BlackPieces.Count();
     public int NumOfWhitePieces => WhitePieces.Count();
@@ -126,8 +127,73 @@ public class Board
 
     public void ExecuteMove(Move move)
     {
-        // TODO: impelment
+        var movedPiece = MovePiece(move.MovingPiece, move.TargetRank, move.TargetFile);
+        if (move.CapturedPiece != null)
+        {
+            RemovePiece(move.CapturedPiece);
+        }
+        LastMove = move;
+        if (IsGameOver())
+        {
+            return;
+        }
+        Console.WriteLine("No worries martiniii, i will help you execute the moves");
         Console.WriteLine("Sorry, I don't know how to execute moves :(");
+    }
+
+    private void RemovePiece(BoardPiece piece)
+    {
+        _pieces.Remove(piece);
+        this[piece.Rank, piece.File] = ChessPiece.Empty;
+    }
+
+    private BoardPiece MovePiece(BoardPiece piece, ChessRank targetRank, ChessFile targetFile)
+    {
+        RemovePiece(piece);
+        var newPiece = new BoardPiece
+        {
+            ChessPiece = piece.ChessPiece,
+            Rank = targetRank,
+            File = targetFile
+        };
+        _pieces.Add(newPiece);
+        this[targetRank, targetFile] = piece.ChessPiece;
+        return newPiece;
+    }
+
+    private bool IsGameOver()
+    {
+        if (NumOfBlackPieces == 0)
+        {
+            Console.WriteLine("Game Over! White wins - No black pawns left.");
+            return true;
+        }
+        if (NumOfWhitePieces == 0)
+        {
+            Console.WriteLine("Game Over! Black wins - No white pawns left.");
+            return true;
+        }
+        if (WhitePieces.Any(piece => piece.Rank == ChessRank.Eight))
+        {
+            Console.WriteLine("Game Over! White wins - White pawn reached the last rank.");
+            return true;
+        }
+        if (BlackPieces.Any(piece => piece.Rank == ChessRank.One))
+        {
+            Console.WriteLine("Game Over! Black wins - Black pawn reached the last rank.");
+            return true;
+        }
+        if (!BlackPieces.Any(piece => GetPossibleMoves(piece).Any()))
+        {
+            Console.WriteLine("Game Over! White wins - Black has no valid moves left.");
+            return true;
+        }
+        if (!WhitePieces.Any(piece => GetPossibleMoves(piece).Any()))
+        {
+            Console.WriteLine("Game Over! Black wins - White has no valid moves left.");
+            return true;
+        }
+        return false;
     }
     public void PrintBoard()
     {
@@ -193,107 +259,130 @@ public class Board
     #endregion
 
     #region Moves
+    //i might be wrong in here because the ToIndex() method is not defined to subtract 1
     private IEnumerable<Move> SingleMoves(BoardPiece piece)
     {
-        ushort bRank = piece.Rank.ToIndex();
-        ushort bFile = piece.File.ToIndex();
-        if (piece.ChessPiece == ChessPiece.White)
+        if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
         {
-            if (this[bRank + 1, bFile] == ChessPiece.Empty)
-            {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File };
-            }
+            yield break;
         }
-        else if (piece.ChessPiece == ChessPiece.Black)
+        int direction = piece.ChessPiece == ChessPiece.White ? 1 : -1;
+        ushort targetRankIndex = (ushort)(piece.Rank.ToIndex() + direction);
+        if (targetRankIndex < 0 || targetRankIndex >= 8)
         {
-            if (this[bRank - 1, bFile] == ChessPiece.Empty)
+            yield break;
+        }
+        ChessRank targetRank = (ChessRank)targetRankIndex;
+        ushort currentFile = piece.File.ToIndex();
+        if (this[targetRankIndex, currentFile] == ChessPiece.Empty)
+        {
+            yield return new Move
             {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File };
-            }
+                MovingPiece = piece,
+                TargetRank = targetRank,
+                TargetFile = piece.File
+            };
         }
     }
+
     private IEnumerable<Move> DoubleMove(BoardPiece piece)
     {
-        ushort bRank = piece.Rank.ToIndex();
-        ushort bFile = piece.File.ToIndex();
-        if (piece.ChessPiece == ChessPiece.White && piece.Rank == ChessRank.Two)
+        if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
         {
-            // Check if the piece can move two steps forward
-            if (this[bRank + 1, bFile] == ChessPiece.Empty && this[bRank + 2, bFile] == ChessPiece.Empty)
-            {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 2, TargetFile = piece.File };
-            }
+            yield break;
         }
-        else if (piece.ChessPiece == ChessPiece.Black && piece.Rank == ChessRank.Seven)
+        int direction = piece.ChessPiece == ChessPiece.White ? 2 : -2;
+        if ((piece.ChessPiece == ChessPiece.White && piece.Rank != ChessRank.Two) ||
+            (piece.ChessPiece == ChessPiece.Black && piece.Rank != ChessRank.Seven))
         {
-            // Check if the piece can move two steps forward
-            if (this[bRank - 1, bFile] == ChessPiece.Empty && this[bRank - 2, bFile] == ChessPiece.Empty)
+            yield break;
+        }
+        ushort targetRankIndex = (ushort)(piece.Rank.ToIndex() + direction);
+        ushort intermediateRankIndex = (ushort)(piece.Rank.ToIndex() + (direction / 2));
+        if (targetRankIndex < 0 || targetRankIndex >= 8 || intermediateRankIndex < 0 || intermediateRankIndex >= 8)
+        {
+            yield break;
+        }
+        ChessRank targetRank = (ChessRank)targetRankIndex;
+        ushort currentFile = piece.File.ToIndex();
+        if (this[intermediateRankIndex, currentFile] == ChessPiece.Empty &&
+            this[targetRankIndex, currentFile] == ChessPiece.Empty)
+        {
+            yield return new Move
             {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 2, TargetFile = piece.File };
-            }
+                MovingPiece = piece,
+                TargetRank = targetRank,
+                TargetFile = piece.File
+            };
         }
     }
+
     private IEnumerable<Move> CapturingMove(BoardPiece piece)
     {
-        ushort bRank = piece.Rank.ToIndex();
-        ushort bFile = piece.File.ToIndex();
-        if (piece.ChessPiece == ChessPiece.White)
+        if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
         {
-            if (this[bRank + 1, bFile + 1] == ChessPiece.Black)
-            {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank + 1, piece.File + 1) };
-            }
-            if (this[bRank + 1, bFile - 1] == ChessPiece.Black)
-            {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank + 1, piece.File - 1) };
-            }
-
+            yield break;
         }
-        else if (piece.ChessPiece == ChessPiece.Black)
+        int direction = piece.ChessPiece == ChessPiece.White ? 1 : -1;
+        ChessPiece opponentPiece = piece.ChessPiece == ChessPiece.White ? ChessPiece.Black : ChessPiece.White;
+        ushort currentRankIndex = piece.Rank.ToIndex();
+        ushort currentFileIndex = piece.File.ToIndex();
+        int[] diagonalOffsets = { -1, 1 };
+        foreach (int offset in diagonalOffsets)
         {
-            if (this[bRank - 1, bFile + 1] == ChessPiece.White)
+            int targetFileIndex = currentFileIndex + offset;
+            int targetRankIndex = currentRankIndex + direction;
+            if (targetRankIndex >= 0 && targetRankIndex < 8 && targetFileIndex >= 0 && targetFileIndex < 8)
             {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank - 1, piece.File + 1) };
-            }
-            if (this[bRank - 1, bFile - 1] == ChessPiece.White)
-            {
-                yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank - 1, piece.File - 1) };
+                if (this[targetRankIndex, targetFileIndex] == opponentPiece)
+                {
+                    yield return new Move
+                    {
+                        MovingPiece = piece,
+                        TargetRank = (ChessRank)targetRankIndex,
+                        TargetFile = (ChessFile)targetFileIndex,
+                        CapturedPiece = GetPieceAt((ChessRank)targetRankIndex, (ChessFile)targetFileIndex)
+                    };
+                }
             }
         }
     }
+
     private IEnumerable<Move> EnPassent(BoardPiece piece)
     {
-        ushort bRank = piece.Rank.ToIndex();
-        ushort bFile = piece.File.ToIndex();
-        if (piece.ChessPiece == ChessPiece.White)
+        if (LastMove == null ||
+            (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black))
         {
-            if (bRank == 4)
-            {
-                if (bFile + 1 < 8 && this[bRank, bFile + 1] == ChessPiece.Black)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File + 1) };
-                }
-                if (bFile - 1 >= 0 && this[bRank, bFile - 1] == ChessPiece.Black)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank + 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File - 1) };
-                }
-            }
+            yield break;
         }
-        else if (piece.ChessPiece == ChessPiece.Black)
+        int direction = piece.ChessPiece == ChessPiece.White ? 1 : -1;
+        ChessRank requiredRank = piece.ChessPiece == ChessPiece.White ? ChessRank.Five : ChessRank.Four;
+        ChessPiece opponentPiece = piece.ChessPiece == ChessPiece.White ? ChessPiece.Black : ChessPiece.White;
+        if (piece.Rank != requiredRank)
         {
-            if (bRank == 3)
+            yield break;
+        }
+        ushort currentRankIndex = piece.Rank.ToIndex();
+        ushort currentFileIndex = piece.File.ToIndex();
+        int[] diagonalOffsets = { -1, 1 };
+        foreach (int offset in diagonalOffsets)
+        {
+            int targetFileIndex = currentFileIndex + offset;
+            if (targetFileIndex >= 0 && targetFileIndex < 8)
             {
-                if (this[bRank, bFile + 1] == ChessPiece.White)
+                if (this[currentRankIndex, targetFileIndex] == opponentPiece &&
+                    LastMove.TargetRank == piece.Rank && LastMove.TargetFile == (ChessFile)targetFileIndex)
                 {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File + 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File + 1) };
-                }
-                if (this[bRank, bFile - 1] == ChessPiece.White)
-                {
-                    yield return new Move { MovingPiece = piece, TargetRank = piece.Rank - 1, TargetFile = piece.File - 1, CapturedPiece = GetPieceAt(piece.Rank, piece.File - 1) };
+                    yield return new Move
+                    {
+                        MovingPiece = piece,
+                        TargetRank = (ChessRank)(currentRankIndex + direction),
+                        TargetFile = (ChessFile)targetFileIndex,
+                        CapturedPiece = GetPieceAt(piece.Rank, (ChessFile)targetFileIndex)
+                    };
                 }
             }
         }
     }
     #endregion
-
 }
