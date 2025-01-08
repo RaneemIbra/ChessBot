@@ -22,7 +22,7 @@ namespace ChessBot.Core.Board
     {
         public static ushort ToIndex(this ChessRank rank)
         {
-            return (ushort)(rank - 1);
+            return (ushort)(rank);
         }
     }
 }

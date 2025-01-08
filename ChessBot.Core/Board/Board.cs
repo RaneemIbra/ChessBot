@@ -11,7 +11,6 @@ public class Board
     public IEnumerable<BoardPiece> BlackPieces => _pieces.Where(w => w.ChessPiece == ChessPiece.Black);
     public IEnumerable<BoardPiece> WhitePieces => _pieces.Where(w => w.ChessPiece == ChessPiece.White);
     public Move? LastMove { get; private set; }
-
     public int NumOfBlackPieces => BlackPieces.Count();
     public int NumOfWhitePieces => WhitePieces.Count();
     #endregion
