@@ -9,14 +9,15 @@ public static class PossibleMoves
             yield break;
         }
         int direction = piece.ChessPiece == ChessPiece.White ? 1 : -1;
-        ushort targetRankIndex = (ushort)(piece.Rank.ToIndex() + direction);
-        if (targetRankIndex < 0 || targetRankIndex >= 8)
+        ushort currentRankIndex = piece.Rank.ToIndex();
+        int nextRankIndex = currentRankIndex + direction;
+        if (nextRankIndex < 0 || nextRankIndex >= 8)
         {
             yield break;
         }
-        ChessRank targetRank = (ChessRank)targetRankIndex;
+        ChessRank targetRank = ((ushort)nextRankIndex).FromIndex();
         ushort currentFile = piece.File.ToIndex();
-        if (board[targetRankIndex, currentFile] == ChessPiece.Empty)
+        if (board[nextRankIndex, currentFile] == ChessPiece.Empty)
         {
             yield return new Move
             {
@@ -33,19 +34,21 @@ public static class PossibleMoves
         {
             yield break;
         }
-        int direction = piece.ChessPiece == ChessPiece.White ? 2 : -2;
+        int direction = (piece.ChessPiece == ChessPiece.White) ? 2 : -2;
         if ((piece.ChessPiece == ChessPiece.White && piece.Rank != ChessRank.Two) ||
             (piece.ChessPiece == ChessPiece.Black && piece.Rank != ChessRank.Seven))
         {
             yield break;
         }
-        ushort targetRankIndex = (ushort)(piece.Rank.ToIndex() + direction);
-        ushort intermediateRankIndex = (ushort)(piece.Rank.ToIndex() + (direction / 2));
-        if (targetRankIndex < 0 || targetRankIndex >= 8 || intermediateRankIndex < 0 || intermediateRankIndex >= 8)
+        ushort currentRankIndex = piece.Rank.ToIndex();
+        int targetRankIndex = currentRankIndex + direction;
+        int intermediateRankIndex = currentRankIndex + (direction / 2);
+        if (targetRankIndex < 0 || targetRankIndex >= 8 ||
+            intermediateRankIndex < 0 || intermediateRankIndex >= 8)
         {
             yield break;
         }
-        ChessRank targetRank = (ChessRank)targetRankIndex;
+        ChessRank targetRank = ((ushort)targetRankIndex).FromIndex();
         ushort currentFile = piece.File.ToIndex();
         if (board[intermediateRankIndex, currentFile] == ChessPiece.Empty &&
             board[targetRankIndex, currentFile] == ChessPiece.Empty)
@@ -66,7 +69,7 @@ public static class PossibleMoves
             yield break;
         }
         int direction = piece.ChessPiece == ChessPiece.White ? 1 : -1;
-        ChessPiece opponentPiece = piece.ChessPiece == ChessPiece.White ? ChessPiece.Black : ChessPiece.White;
+        ChessPiece opponentPiece = (piece.ChessPiece == ChessPiece.White) ? ChessPiece.Black : ChessPiece.White;
         ushort currentRankIndex = piece.Rank.ToIndex();
         ushort currentFileIndex = piece.File.ToIndex();
         int[] diagonalOffsets = { -1, 1 };
@@ -81,9 +84,12 @@ public static class PossibleMoves
                     yield return new Move
                     {
                         MovingPiece = piece,
-                        TargetRank = (ChessRank)targetRankIndex,
+                        TargetRank = ((ushort)targetRankIndex).FromIndex(),
                         TargetFile = (ChessFile)targetFileIndex,
-                        CapturedPiece = board.GetPieceAt((ChessRank)targetRankIndex, (ChessFile)targetFileIndex)
+                        CapturedPiece = board.GetPieceAt(
+                            ((ushort)targetRankIndex).FromIndex(),
+                            (ChessFile)targetFileIndex
+                        )
                     };
                 }
             }
@@ -98,12 +104,12 @@ public static class PossibleMoves
             yield break;
         }
         int direction = piece.ChessPiece == ChessPiece.White ? 1 : -1;
-        ChessRank requiredRank = piece.ChessPiece == ChessPiece.White ? ChessRank.Five : ChessRank.Four;
-        ChessPiece opponentPiece = piece.ChessPiece == ChessPiece.White ? ChessPiece.Black : ChessPiece.White;
+        ChessRank requiredRank = (piece.ChessPiece == ChessPiece.White) ? ChessRank.Five : ChessRank.Four;
         if (piece.Rank != requiredRank)
         {
             yield break;
         }
+        ChessPiece opponentPiece = (piece.ChessPiece == ChessPiece.White) ? ChessPiece.Black : ChessPiece.White;
         ushort currentRankIndex = piece.Rank.ToIndex();
         ushort currentFileIndex = piece.File.ToIndex();
         int[] diagonalOffsets = { -1, 1 };
@@ -113,12 +119,14 @@ public static class PossibleMoves
             if (targetFileIndex >= 0 && targetFileIndex < 8)
             {
                 if (board[currentRankIndex, targetFileIndex] == opponentPiece &&
-                    board.LastMove.TargetRank == piece.Rank && board.LastMove.TargetFile == (ChessFile)targetFileIndex)
+                    board.LastMove.TargetRank == piece.Rank &&
+                    board.LastMove.TargetFile == (ChessFile)targetFileIndex)
                 {
+                    ushort newRankIndex = (ushort)(currentRankIndex + direction);
                     yield return new Move
                     {
                         MovingPiece = piece,
-                        TargetRank = (ChessRank)(currentRankIndex + direction),
+                        TargetRank = newRankIndex.FromIndex(),
                         TargetFile = (ChessFile)targetFileIndex,
                         CapturedPiece = board.GetPieceAt(piece.Rank, (ChessFile)targetFileIndex)
                     };
@@ -126,4 +134,5 @@ public static class PossibleMoves
             }
         }
     }
+
 }

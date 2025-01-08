@@ -92,16 +92,17 @@ public class Board
 
     public void ExecuteMove(Move move)
     {
-        var movedPiece = BoardManipulation.MovePiece(this, move.MovingPiece, move.TargetRank, move.TargetFile);
         if (move.CapturedPiece != null)
         {
             BoardManipulation.RemovePiece(this, move.CapturedPiece);
         }
+        var movedPiece = BoardManipulation.MovePiece(this, move.MovingPiece, move.TargetRank, move.TargetFile);
         LastMove = move;
         if (EndGame.IsGameOver(this))
         {
             return;
         }
+
         Console.WriteLine("No worries martiniii, i will help you execute the moves");
         Console.WriteLine("Sorry, I don't know how to execute moves :(");
     }
@@ -144,14 +145,23 @@ public class Board
     #region Private Helpers
     internal void AddPiece(BoardPiece piece)
     {
+        var occupant = GetPieceAt(piece.Rank, piece.File);
+        if (occupant != null)
+        {
+            _pieces.Remove(occupant);
+        }
         _pieces.Add(piece);
         this[piece.Rank, piece.File] = piece.ChessPiece;
     }
 
     internal void RemovePiece(BoardPiece piece)
     {
-        _pieces.Remove(piece);
-        this[piece.Rank, piece.File] = ChessPiece.Empty;
+        var occupant = GetPieceAt(piece.Rank, piece.File);
+        if (occupant != null)
+        {
+            _pieces.Remove(occupant);
+            this[piece.Rank, piece.File] = ChessPiece.Empty;
+        }
     }
 
     internal void InitPiece(ChessRank rank, ChessFile file, ChessPiece piece, bool unsafeInit = false)

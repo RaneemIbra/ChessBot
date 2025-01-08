@@ -17,6 +17,10 @@ public static class BoardManipulation
 
     public static void RemovePiece(Board board, BoardPiece piece)
     {
-        board.RemovePiece(piece);
+        var occupant = board.GetPieceAt(piece.Rank, piece.File);
+        if (occupant != null)
+        {
+            board.RemovePiece(occupant);
+        }
     }
 }
