@@ -15,60 +15,103 @@ namespace MyApp
             board.Setup(setupParts);
             RunBoardCloneTest(board, 1000000);
             bool whitesTurn = true;
-            while(true)
+            while (true)
             {
                 board.PrintBoard();
-                IEnumerable<BoardPiece> currentPieces = board.WhitePieces;
+                IEnumerable<BoardPiece> currentPieces;
                 if (whitesTurn)
                 {
-                    Console.WriteLine("It's whites turn. Possible pieces:");
+                    Console.WriteLine("It's White's turn.");
                     currentPieces = board.WhitePieces;
                 }
                 else
                 {
-                    Console.WriteLine("It's blacks turn. Possible pieces:");
+                    Console.WriteLine("It's Black's turn.");
                     currentPieces = board.BlackPieces;
                 }
-                var cPiece = PickPiece(currentPieces);
-                var cMove = PickMove(board.GetPossibleMoves(cPiece));
-                board.ExecuteMove(cMove);
+                if (EndGame.IsGameOver(board))
+                {
+                    break;
+                }
+                var chosenPiece = PickPiece(board, currentPieces);
+                if (chosenPiece == null)
+                {
+                    if (EndGame.IsGameOver(board))
+                    {
+                        break;
+                    }
+                    break;
+                }
+                var possibleMoves = board.GetPossibleMoves(chosenPiece).ToArray();
+                var chosenMove = PickMove(possibleMoves);
+                board.ExecuteMove(chosenMove);
+                if (EndGame.IsGameOver(board))
+                {
+                    break;
+                }
                 whitesTurn = !whitesTurn;
             }
         }
 
-        static Move PickMove(IEnumerable<Move> moves)
+        static Move? PickMove(Move[] moves)
         {
-            int index = 0;
-            foreach (var move in moves)
+            if (moves.Length == 0)
             {
-                Console.WriteLine($"[{index++}] {move.TargetFile}{(ushort)move.TargetRank} - {move.MoveCommand}");
+                Console.WriteLine("No valid moves available.");
+                return null;
             }
-            var moveIndex = -1;
-            while (!(moveIndex >= 0 && moveIndex < moves.Count()))
+            for (int i = 0; i < moves.Length; i++)
             {
-                Console.Write("Pick a valid move: ");
-                moveIndex = Console.ReadKey().KeyChar - '0';
-                Console.Write(Environment.NewLine);
+                var move = moves[i];
+                Console.WriteLine($"[{i}] {move.TargetFile}{(ushort)move.TargetRank} - {move.MoveCommand}");
             }
-            return moves.ElementAt(moveIndex);
+            while (true)
+            {
+                Console.Write("Pick a valid move index: ");
+                if (!int.TryParse(Console.ReadLine(), out var moveIndex) ||
+                    moveIndex < 0 || moveIndex >= moves.Length)
+                {
+                    Console.WriteLine("Invalid index. Try again.");
+                    continue;
+                }
+                return moves[moveIndex];
+            }
         }
 
-        static BoardPiece PickPiece(IEnumerable<BoardPiece> currentPieces)
+
+        static BoardPiece? PickPiece(Board board, IEnumerable<BoardPiece> currentPieces)
         {
-            int index = 0;
-            foreach (var piece in currentPieces)
+            var piecesArray = currentPieces.ToArray();
+            if (!piecesArray.Any())
             {
-                Console.WriteLine($"[{index++}] {piece.File}{(ushort)piece.Rank}");
+                return null;
             }
-            var pieceIndex = -1;
-            while (!(pieceIndex >= 0 && pieceIndex < currentPieces.Count()))
+            while (true)
             {
-                Console.Write("Pick a valid piece: ");
-                pieceIndex = Console.ReadKey().KeyChar - '0';
-                Console.Write(Environment.NewLine);
+                Console.WriteLine("Pick a piece with valid moves:");
+                for (int i = 0; i < piecesArray.Length; i++)
+                {
+                    var piece = piecesArray[i];
+                    int moveCount = board.GetPossibleMoves(piece).Count();
+                    Console.WriteLine($"[{i}] {piece.File}{(ushort)piece.Rank} - {moveCount} possible moves");
+                }
+                Console.Write("Enter piece index: ");
+                if (!int.TryParse(Console.ReadLine(), out var choice) || choice < 0 || choice >= piecesArray.Length)
+                {
+                    Console.WriteLine("Invalid index. Try again.\n");
+                    continue;
+                }
+                var chosenPiece = piecesArray[choice];
+                var chosenMoves = board.GetPossibleMoves(chosenPiece).ToArray();
+                if (!chosenMoves.Any())
+                {
+                    Console.WriteLine("That piece has no valid moves. Please pick another piece.\n");
+                    continue;
+                }
+                return chosenPiece;
             }
-            return currentPieces.ElementAt(pieceIndex);
         }
+
 
         static void RunBoardCloneTest(Board board, long numberOfClones)
         {

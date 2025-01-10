@@ -24,5 +24,10 @@ namespace ChessBot.Core.Board
         {
             return (ushort)(rank - 1);
         }
+
+        public static ChessRank FromIndex(this ushort index)
+        {
+            return (ChessRank)(index + 1);
+        }
     }
 }
