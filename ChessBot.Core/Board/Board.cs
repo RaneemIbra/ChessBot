@@ -1,187 +1,193 @@
-﻿using ChessBot.Core.Board;
-
-public class Board
+﻿namespace ChessBot.Core.Board
 {
-    #region Members
-    private ChessPiece[,] _board;
-    private List<BoardPiece> _pieces = new List<BoardPiece>();
-    #endregion
-
-    #region Properties
-    public IEnumerable<BoardPiece> BlackPieces => _pieces.Where(w => w.ChessPiece == ChessPiece.Black);
-    public IEnumerable<BoardPiece> WhitePieces => _pieces.Where(w => w.ChessPiece == ChessPiece.White);
-    public Move? LastMove { get; private set; }
-    public int NumOfBlackPieces => BlackPieces.Count();
-    public int NumOfWhitePieces => WhitePieces.Count();
-    #endregion
-
-    #region Constructor / Copy
-    public Board()
+    public class Board
     {
-        _board = new ChessPiece[8, 8];
-    }
-    public Board Clone()
-    {
-        var copy = new Board();
-        foreach (var bPiece in BlackPieces)
+        #region Members
+        private readonly ChessPiece[,] _board;
+        private readonly List<BoardPiece> _pieces = [];
+        #endregion
+
+        #region Properties
+        public IEnumerable<BoardPiece> BlackPieces => _pieces.Where(w => w.ChessPiece == ChessPiece.Black);
+        public IEnumerable<BoardPiece> WhitePieces => _pieces.Where(w => w.ChessPiece == ChessPiece.White);
+        public Move? LastMove { get; private set; }
+        public int NumOfBlackPieces => BlackPieces.Count();
+        public int NumOfWhitePieces => WhitePieces.Count();
+        #endregion
+
+        #region Constructor / Copy
+        public Board()
         {
-            copy.InitPiece(bPiece.Rank, bPiece.File, bPiece.ChessPiece, true);
+            _board = new ChessPiece[8, 8];
         }
-        foreach (var wPiece in WhitePieces)
+        public Board Clone()
         {
-            copy.InitPiece(wPiece.Rank, wPiece.File, wPiece.ChessPiece, true);
-        }
-        return copy;
-    }
-    #endregion
-
-    #region Public interface
-
-    public ChessPiece this[int rank, int file]
-    {
-        get
-        {
-            if (rank >= 0 && rank < 8 && file >= 0 && file < 8)
+            var copy = new Board();
+            foreach (var bPiece in BlackPieces)
             {
-                return _board[rank, file];
+                copy.InitPiece(bPiece.Rank, bPiece.File, bPiece.ChessPiece, true);
             }
-            return ChessPiece.Invalid;
-        }
-        set
-        {
-            if (rank >= 0 && rank < 8 && file >= 0 && file < 8)
+            foreach (var wPiece in WhitePieces)
             {
-                _board[rank, file] = value;
+                copy.InitPiece(wPiece.Rank, wPiece.File, wPiece.ChessPiece, true);
             }
-            else
+            return copy;
+        }
+        #endregion
+
+        #region Public interface
+
+        public ChessPiece this[int rank, int file]
+        {
+            get
             {
-                throw new ArgumentOutOfRangeException();
-            }
-        }
-    }
-    public ChessPiece this[ChessRank rank, ChessFile file]
-    {
-        get
-        {
-            return this[rank.ToIndex(), file.ToIndex()];
-        }
-        set
-        {
-            this[rank.ToIndex(), file.ToIndex()] = value;
-        }
-    }
-    public IEnumerable<Move> GetPossibleMoves(BoardPiece boardPiece)
-    {
-        List<Move> possibleMoves = new();
-        possibleMoves.AddRange(PossibleMoves.SingleMoves(this, boardPiece));
-        possibleMoves.AddRange(PossibleMoves.DoubleMove(this, boardPiece));
-        possibleMoves.AddRange(PossibleMoves.CapturingMove(this, boardPiece));
-        possibleMoves.AddRange(PossibleMoves.EnPassent(this, boardPiece));
-        return possibleMoves;
-    }
-
-    public BoardPiece? GetPieceAt(ChessRank rank, ChessFile file)
-    {
-        return _pieces.SingleOrDefault(a => a.Rank == rank && a.File == file);
-    }
-
-    public void Setup(IEnumerable<string> setupParts)
-    {
-        BoardInitializer.Setup(this, setupParts);
-    }
-
-    public void ExecuteMove(Move move)
-    {
-        if (move.CapturedPiece != null)
-        {
-            BoardManipulation.RemovePiece(this, move.CapturedPiece);
-        }
-        var movedPiece = BoardManipulation.MovePiece(this, move.MovingPiece, move.TargetRank, move.TargetFile);
-        LastMove = move;
-        if (EndGame.IsGameOver(this))
-        {
-            return;
-        }
-
-        Console.WriteLine("No worries martiniii, i will help you execute the moves");
-        Console.WriteLine("Sorry, I don't know how to execute moves :(");
-    }
-
-    public void PrintBoard()
-    {
-        Console.WriteLine("   | A | B | C | D | E | F | G | H |");
-        Console.WriteLine("   |-------------------------------|");
-        foreach (ChessRank rank in Enum.GetValues<ChessRank>().Reverse())
-        {
-            Console.Write($" {(ushort)rank} |");
-            foreach (ChessFile file in Enum.GetValues<ChessFile>())
-            {
-                var chessPiece = this[rank, file];
-                switch (chessPiece)
+                if (rank >= 0 && rank < 8 && file >= 0 && file < 8)
                 {
-                    case ChessPiece.Empty:
-                        Console.Write("   |");
-                        break;
-                    case ChessPiece.White:
-                        Console.Write(" W |");
-                        break;
-                    case ChessPiece.Black:
-                        Console.Write(" B |");
-                        break;
+                    return _board[rank, file];
                 }
-
+                return ChessPiece.Invalid;
             }
-            Console.Write($" {(ushort)rank} {Environment.NewLine}");
-        }
-        Console.WriteLine("   |-------------------------------|");
-        Console.WriteLine("   | A | B | C | D | E | F | G | H |");
-    }
-    public void ClearBoard()
-    {
-        BoardInitializer.ClearBoard(this);
-    }
-    #endregion
-
-    #region Private Helpers
-    internal void AddPiece(BoardPiece piece)
-    {
-        var occupant = GetPieceAt(piece.Rank, piece.File);
-        if (occupant != null)
-        {
-            _pieces.Remove(occupant);
-        }
-        _pieces.Add(piece);
-        this[piece.Rank, piece.File] = piece.ChessPiece;
-    }
-
-    internal void RemovePiece(BoardPiece piece)
-    {
-        var occupant = GetPieceAt(piece.Rank, piece.File);
-        if (occupant != null)
-        {
-            _pieces.Remove(occupant);
-            this[piece.Rank, piece.File] = ChessPiece.Empty;
-        }
-    }
-
-    internal void InitPiece(ChessRank rank, ChessFile file, ChessPiece piece, bool unsafeInit = false)
-    {
-        if (!unsafeInit)
-        {
-            var existing = _pieces.FirstOrDefault(a => a.Rank == rank && a.File == file);
-            // Check if the piece is valid
-            if (existing != null)
+            set
             {
-                // ... we could also throw an exception here, init shoult not be called with nonsense
-                _pieces.Remove(existing);
+                if (rank >= 0 && rank < 8 && file >= 0 && file < 8)
+                {
+                    _board[rank, file] = value;
+                }
+                else
+                {
+                    if (rank < 0 || rank >= 8)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(rank));
+                    }
+                    if (file < 0 || file >= 8)
+                    {
+                        throw new ArgumentOutOfRangeException(nameof(file));
+                    }
+                }
             }
         }
-        if (piece != ChessPiece.Empty)
+        public ChessPiece this[ChessRank rank, ChessFile file]
         {
-            var boardPiece = new BoardPiece { File = file, Rank = rank, ChessPiece = piece };
-            _pieces.Add(boardPiece);
+            get
+            {
+                return this[rank.ToIndex(), file.ToIndex()];
+            }
+            set
+            {
+                this[rank.ToIndex(), file.ToIndex()] = value;
+            }
         }
-        this[rank, file] = piece;
+        public IEnumerable<Move> GetPossibleMoves(BoardPiece boardPiece)
+        {
+            return
+            [
+                .. PossibleMoves.SingleMoves(this, boardPiece),
+                .. PossibleMoves.DoubleMove(this, boardPiece),
+                .. PossibleMoves.CapturingMove(this, boardPiece),
+                .. PossibleMoves.EnPassent(this, boardPiece),
+            ];
+        }
+
+        public BoardPiece? GetPieceAt(ChessRank rank, ChessFile file)
+        {
+            return _pieces.SingleOrDefault(a => a.Rank == rank && a.File == file);
+        }
+
+        public void Setup(IEnumerable<string> setupParts)
+        {
+            BoardInitializer.Setup(this, setupParts);
+        }
+
+        public void ExecuteMove(Move move)
+        {
+            if (move.CapturedPiece != null)
+            {
+                BoardManipulation.RemovePiece(this, move.CapturedPiece);
+            }
+            BoardManipulation.MovePiece(this, move.MovingPiece, move.TargetRank, move.TargetFile);
+            LastMove = move;
+            if (EndGame.IsGameOver(this))
+            {
+                return;
+            }
+        }
+
+        public void PrintBoard()
+        {
+            Console.WriteLine("   | A | B | C | D | E | F | G | H |");
+            Console.WriteLine("   |-------------------------------|");
+            foreach (ChessRank rank in Enum.GetValues<ChessRank>().Reverse())
+            {
+                Console.Write($" {(ushort)rank} |");
+                foreach (ChessFile file in Enum.GetValues<ChessFile>())
+                {
+                    var chessPiece = this[rank, file];
+                    switch (chessPiece)
+                    {
+                        case ChessPiece.Empty:
+                            Console.Write("   |");
+                            break;
+                        case ChessPiece.White:
+                            Console.Write(" W |");
+                            break;
+                        case ChessPiece.Black:
+                            Console.Write(" B |");
+                            break;
+                    }
+
+                }
+                Console.Write($" {(ushort)rank} {Environment.NewLine}");
+            }
+            Console.WriteLine("   |-------------------------------|");
+            Console.WriteLine("   | A | B | C | D | E | F | G | H |");
+        }
+        public void ClearBoard()
+        {
+            BoardInitializer.ClearBoard(this);
+        }
+        #endregion
+
+        #region Private Helpers
+        internal void AddPiece(BoardPiece piece)
+        {
+            var occupant = GetPieceAt(piece.Rank, piece.File);
+            if (occupant != null)
+            {
+                _pieces.Remove(occupant);
+            }
+            _pieces.Add(piece);
+            this[piece.Rank, piece.File] = piece.ChessPiece;
+        }
+
+        internal void RemovePiece(BoardPiece piece)
+        {
+            var occupant = GetPieceAt(piece.Rank, piece.File);
+            if (occupant != null)
+            {
+                _pieces.Remove(occupant);
+                this[piece.Rank, piece.File] = ChessPiece.Empty;
+            }
+        }
+
+        internal void InitPiece(ChessRank rank, ChessFile file, ChessPiece piece, bool unsafeInit = false)
+        {
+            if (!unsafeInit)
+            {
+                var existing = _pieces.FirstOrDefault(a => a.Rank == rank && a.File == file);
+                // Check if the piece is valid
+                if (existing != null)
+                {
+                    // ... we could also throw an exception here, init shoult not be called with nonsense
+                    _pieces.Remove(existing);
+                }
+            }
+            if (piece != ChessPiece.Empty)
+            {
+                var boardPiece = new BoardPiece { File = file, Rank = rank, ChessPiece = piece };
+                _pieces.Add(boardPiece);
+            }
+            this[rank, file] = piece;
+        }
+        #endregion
     }
-    #endregion
 }

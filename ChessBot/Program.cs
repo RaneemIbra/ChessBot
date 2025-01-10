@@ -1,8 +1,7 @@
-﻿using System;
+﻿using ChessBot.Core.Board;
 using System.Diagnostics;
-using System.Reflection;
 
-namespace MyApp
+namespace ChessBot
 {
     internal class Program
     {
@@ -10,6 +9,8 @@ namespace MyApp
 
         static void Main(string[] args)
         {
+            Console.WriteLine($"Programm started with {args.Length} arguments");
+            // TODO: use arguments as shown in assignment documentation
             var setupParts = DEFAULT_BOARD.Split(" ");
             var board = new Board();
             board.Setup(setupParts);
@@ -19,6 +20,7 @@ namespace MyApp
             {
                 board.PrintBoard();
                 IEnumerable<BoardPiece> currentPieces;
+                string? message = null;
                 if (whitesTurn)
                 {
                     Console.WriteLine("It's White's turn.");
@@ -29,27 +31,33 @@ namespace MyApp
                     Console.WriteLine("It's Black's turn.");
                     currentPieces = board.BlackPieces;
                 }
-                if (EndGame.IsGameOver(board))
+                if (EndGame.IsGameOver(board, out message))
                 {
+                    Console.WriteLine(message);
                     break;
                 }
                 var chosenPiece = PickPiece(board, currentPieces);
                 if (chosenPiece == null)
                 {
-                    if (EndGame.IsGameOver(board))
+                    if (EndGame.IsGameOver(board, out message))
                     {
+                        Console.WriteLine(message);
                         break;
                     }
                     break;
                 }
                 var possibleMoves = board.GetPossibleMoves(chosenPiece).ToArray();
                 var chosenMove = PickMove(possibleMoves);
-                board.ExecuteMove(chosenMove);
-                if (EndGame.IsGameOver(board))
+                if (chosenMove != null)
                 {
-                    break;
+                    board.ExecuteMove(chosenMove);
+                    if (EndGame.IsGameOver(board, out message))
+                    {
+                        Console.WriteLine(message);
+                        break;
+                    }
+                    whitesTurn = !whitesTurn;
                 }
-                whitesTurn = !whitesTurn;
             }
         }
 
@@ -82,7 +90,7 @@ namespace MyApp
         static BoardPiece? PickPiece(Board board, IEnumerable<BoardPiece> currentPieces)
         {
             var piecesArray = currentPieces.ToArray();
-            if (!piecesArray.Any())
+            if (piecesArray.Length == 0)
             {
                 return null;
             }
@@ -103,7 +111,7 @@ namespace MyApp
                 }
                 var chosenPiece = piecesArray[choice];
                 var chosenMoves = board.GetPossibleMoves(chosenPiece).ToArray();
-                if (!chosenMoves.Any())
+                if (chosenMoves.Length == 0)
                 {
                     Console.WriteLine("That piece has no valid moves. Please pick another piece.\n");
                     continue;
@@ -116,7 +124,7 @@ namespace MyApp
         static void RunBoardCloneTest(Board board, long numberOfClones)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            HashSet<Board> cloneBoards = new();
+            HashSet<Board> cloneBoards = [];
             for (int i = 1; i <= numberOfClones; i++)
             {
                 var nBoard = board.Clone();
@@ -126,7 +134,7 @@ namespace MyApp
                     cloneBoards.Add(nBoard);
                     Console.Clear();
                     Console.WriteLine($"Cloning board {numberOfClones} times");
-                    Console.WriteLine($"{sw.ElapsedMilliseconds} ms / {i} of {numberOfClones} / {(sw.ElapsedMilliseconds / (decimal)i).ToString("0.00000")} ms per clone");
+                    Console.WriteLine($"{sw.ElapsedMilliseconds} ms / {i} of {numberOfClones} / {sw.ElapsedMilliseconds / (decimal)i:0.00000} ms per clone");
                     sw.Start();
                 }
 
