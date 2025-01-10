@@ -35,14 +35,14 @@
                 yield break;
             }
             int direction = piece.ChessPiece == ChessPiece.White ? 2 : -2;
-            if (piece.ChessPiece == ChessPiece.White && piece.Rank != ChessRank.Two ||
-                piece.ChessPiece == ChessPiece.Black && piece.Rank != ChessRank.Seven)
+            if ((piece.ChessPiece == ChessPiece.White && piece.Rank != ChessRank.Two) ||
+                (piece.ChessPiece == ChessPiece.Black && piece.Rank != ChessRank.Seven))
             {
                 yield break;
             }
             ushort currentRankIndex = piece.Rank.ToIndex();
             int targetRankIndex = currentRankIndex + direction;
-            int intermediateRankIndex = currentRankIndex + direction / 2;
+            int intermediateRankIndex = currentRankIndex + (direction / 2);
             if (targetRankIndex < 0 || targetRankIndex >= 8 ||
                 intermediateRankIndex < 0 || intermediateRankIndex >= 8)
             {
@@ -99,7 +99,7 @@
         public static IEnumerable<Move> EnPassent(Board board, BoardPiece piece)
         {
             if (board.LastMove == null ||
-                piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
+                (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black))
             {
                 yield break;
             }

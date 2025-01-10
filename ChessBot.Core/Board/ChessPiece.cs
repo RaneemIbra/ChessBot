@@ -1,7 +1,10 @@
-public enum ChessPiece : ushort
+namespace ChessBot.Core.Board
 {
-	Empty = 0,
-    White = 1,
-    Black = 2,
-    Invalid = 3
+    public enum ChessPiece : ushort
+    {
+        Empty = 0,
+        White = 1,
+        Black = 2,
+        Invalid = 3
+    }
 }

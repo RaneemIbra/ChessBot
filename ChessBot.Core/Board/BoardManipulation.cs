@@ -1,26 +1,27 @@
-﻿using ChessBot.Core.Board;
-
-public static class BoardManipulation
+﻿namespace ChessBot.Core.Board
 {
-    public static BoardPiece MovePiece(Board board, BoardPiece piece, ChessRank targetRank, ChessFile targetFile)
+    public static class BoardManipulation
     {
-        RemovePiece(board, piece);
-        var newPiece = new BoardPiece
+        public static BoardPiece MovePiece(Board board, BoardPiece piece, ChessRank targetRank, ChessFile targetFile)
         {
-            ChessPiece = piece.ChessPiece,
-            Rank = targetRank,
-            File = targetFile
-        };
-        board.AddPiece(newPiece);
-        return newPiece;
-    }
+            RemovePiece(board, piece);
+            var newPiece = new BoardPiece
+            {
+                ChessPiece = piece.ChessPiece,
+                Rank = targetRank,
+                File = targetFile
+            };
+            board.AddPiece(newPiece);
+            return newPiece;
+        }
 
-    public static void RemovePiece(Board board, BoardPiece piece)
-    {
-        var occupant = board.GetPieceAt(piece.Rank, piece.File);
-        if (occupant != null)
+        public static void RemovePiece(Board board, BoardPiece piece)
         {
-            board.RemovePiece(occupant);
+            var occupant = board.GetPieceAt(piece.Rank, piece.File);
+            if (occupant != null)
+            {
+                board.RemovePiece(occupant);
+            }
         }
     }
 }

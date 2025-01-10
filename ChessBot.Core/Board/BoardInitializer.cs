@@ -1,25 +1,26 @@
-﻿using ChessBot.Core.Board;
-
-public static class BoardInitializer
+﻿namespace ChessBot.Core.Board
 {
-    public static void Setup(Board board, IEnumerable<string> setupParts)
+    public static class BoardInitializer
     {
-        foreach (var part in setupParts)
+        public static void Setup(Board board, IEnumerable<string> setupParts)
         {
-            ChessPiece piece = part[0].ToString().ToLower() == "w" ? ChessPiece.White : ChessPiece.Black;
-            ChessFile file = (ChessFile)(part[1] - 'a');
-            ChessRank rank = (ChessRank)(part[2] - '1' + 1);
-            board.InitPiece(rank, file, piece);
-        }
-    }
-
-    public static void ClearBoard(Board board)
-    {
-        foreach (ChessRank rank in Enum.GetValues(typeof(ChessRank)))
-        {
-            foreach (ChessFile file in Enum.GetValues(typeof(ChessFile)))
+            foreach (var part in setupParts)
             {
-                board.InitPiece(rank, file, ChessPiece.Empty);
+                ChessPiece piece = part[0].ToString().Equals("w", StringComparison.CurrentCultureIgnoreCase) ? ChessPiece.White : ChessPiece.Black;
+                ChessFile file = (ChessFile)(part[1] - 'a');
+                ChessRank rank = (ChessRank)(part[2] - '1' + 1);
+                board.InitPiece(rank, file, piece);
+            }
+        }
+
+        public static void ClearBoard(Board board)
+        {
+            foreach (ChessRank rank in Enum.GetValues<ChessRank>())
+            {
+                foreach (ChessFile file in Enum.GetValues<ChessFile>())
+                {
+                    board.InitPiece(rank, file, ChessPiece.Empty);
+                }
             }
         }
     }

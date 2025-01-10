@@ -20,7 +20,6 @@ namespace ChessBot
             {
                 board.PrintBoard();
                 IEnumerable<BoardPiece> currentPieces;
-                string? message = null;
                 if (whitesTurn)
                 {
                     Console.WriteLine("It's White's turn.");
@@ -31,7 +30,7 @@ namespace ChessBot
                     Console.WriteLine("It's Black's turn.");
                     currentPieces = board.BlackPieces;
                 }
-                if (EndGame.IsGameOver(board, out message))
+                if (EndGame.IsGameOver(board, out string? message))
                 {
                     Console.WriteLine(message);
                     break;
