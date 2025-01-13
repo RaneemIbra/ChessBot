@@ -2,7 +2,7 @@
 {
     public static class BoardInitializer
     {
-        public static void Setup(Board board, IEnumerable<string> setupParts)
+        public static void Setup(ChessBoard board, IEnumerable<string> setupParts)
         {
             foreach (var part in setupParts)
             {
@@ -13,7 +13,7 @@
             }
         }
 
-        public static void ClearBoard(Board board)
+        public static void ClearBoard(ChessBoard board)
         {
             foreach (ChessRank rank in Enum.GetValues<ChessRank>())
             {

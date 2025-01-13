@@ -12,7 +12,7 @@ namespace ChessBot
             Console.WriteLine($"Programm started with {args.Length} arguments");
             // TODO: use arguments as shown in assignment documentation
             var setupParts = DEFAULT_BOARD.Split(" ");
-            var board = new Board();
+            var board = new ChessBoard();
             board.Setup(setupParts);
             RunBoardCloneTest(board, 1000000);
             bool whitesTurn = true;
@@ -85,8 +85,7 @@ namespace ChessBot
             }
         }
 
-
-        static BoardPiece? PickPiece(Board board, IEnumerable<BoardPiece> currentPieces)
+        static BoardPiece? PickPiece(ChessBoard board, IEnumerable<BoardPiece> currentPieces)
         {
             var piecesArray = currentPieces.ToArray();
             if (piecesArray.Length == 0)
@@ -119,11 +118,10 @@ namespace ChessBot
             }
         }
 
-
-        static void RunBoardCloneTest(Board board, long numberOfClones)
+        static void RunBoardCloneTest(ChessBoard board, long numberOfClones)
         {
             Stopwatch sw = Stopwatch.StartNew();
-            HashSet<Board> cloneBoards = [];
+            HashSet<ChessBoard> cloneBoards = [];
             for (int i = 1; i <= numberOfClones; i++)
             {
                 var nBoard = board.Clone();
