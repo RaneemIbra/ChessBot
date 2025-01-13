@@ -24,4 +24,5 @@ namespace ChessBot.Core.Agents
             }
             return AllMoves.ElementAt(random.Next(AllMoves.Count()));
         }
+    }
 }
