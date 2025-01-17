@@ -13,9 +13,25 @@ namespace ChessBot
             var setupParts = DEFAULT_BOARD.Split(" ");
             var board = new ChessBoard();
             board.Setup(setupParts);
-            Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent");
-            int mode = GetChoice(new[] { 1, 2 });
-            IAgent? agent = mode == 2 ? new SimpleAgent() : null;
+            Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent, 3 for Agent vs Agent");
+            int mode = GetChoice(new[] { 1, 2, 3});
+            IAgent? WhiteAgent = null;
+            IAgent? BlackAgent = null;
+            if(mode == 2){
+                Console.WriteLine("Who plays as white? 1 for Player, 2 for Agent");
+                int choice = GetChoice(new[] { 1, 2 });
+                if(choice == 2){
+                    WhiteAgent = new SimpleAgent();
+                }
+                else{
+                    BlackAgent = new SimpleAgent();
+                }
+            }
+            else if(mode == 3){
+                WhiteAgent = new SimpleAgent();
+                BlackAgent = new SimpleAgent();
+            }
+
             bool whitesTurn = true;
             while (true)
             {
@@ -27,33 +43,28 @@ namespace ChessBot
                     break;
                 }
 
-                if (whitesTurn || mode == 1)
+                if (whitesTurn)
                 {
-                    var currentPieces = whitesTurn ? board.WhitePieces : board.BlackPieces;
-                    var chosenPiece = PickPiece(board, currentPieces);
-
-                    if (chosenPiece == null)
-                    {
-                        Console.WriteLine("No valid moves available. Game over!");
-                        break;
+                    if(WhiteAgent != null){
+                        Console.WriteLine("White's Agent turn");
+                        var move = WhiteAgent.GetMove(board, true);
+                        board.ExecuteMove(move);
                     }
-
-                    var possibleMoves = board.GetPossibleMoves(chosenPiece).ToArray();
-                    var chosenMove = PickMove(possibleMoves);
-
-                    if (chosenMove != null)
-                    {
-                        board.ExecuteMove(chosenMove);
-                        whitesTurn = !whitesTurn;
+                    else{
+                        ExecutePlayerTurn(board, true);
                     }
                 }
-                else
-                {
-                    Console.WriteLine("Agent's turn...");
-                    var move = agent!.GetMove(board, whitesTurn);
-                    board.ExecuteMove(move);
-                    whitesTurn = !whitesTurn;
+                else{
+                    if(BlackAgent != null){
+                        Console.WriteLine("Black's Agent turn");
+                        var move = BlackAgent.GetMove(board, false);
+                        board.ExecuteMove(move);
+                    }
+                    else{
+                        ExecutePlayerTurn(board, false);
+                    }
                 }
+                whitesTurn = !whitesTurn;
             }
         }
 
@@ -67,6 +78,25 @@ namespace ChessBot
                     return choice;
                 }
                 Console.WriteLine("Invalid choice. Try again.");
+            }
+        }
+
+        static void ExecutePlayerTurn(ChessBoard board, bool isWhiteTurn){
+            var currentPieces = isWhiteTurn ? board.WhitePieces : board.BlackPieces;
+            var chosenPiece = PickPiece(board, currentPieces);
+
+            if (chosenPiece == null)
+            {
+                Console.WriteLine("No valid moves available. Game over!");
+                return;
+            }
+
+            var possibleMoves = board.GetPossibleMoves(chosenPiece).ToArray();
+            var chosenMove = PickMove(possibleMoves);
+
+            if (chosenMove != null)
+            {
+                board.ExecuteMove(chosenMove);
             }
         }
 
