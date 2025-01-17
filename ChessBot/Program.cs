@@ -1,4 +1,5 @@
 ﻿using ChessBot.Core.Board;
+using ChessBot.Core.Agents;
 using System.Diagnostics;
 
 namespace ChessBot
@@ -9,54 +10,63 @@ namespace ChessBot
 
         static void Main(string[] args)
         {
-            Console.WriteLine($"Programm started with {args.Length} arguments");
-            // TODO: use arguments as shown in assignment documentation
             var setupParts = DEFAULT_BOARD.Split(" ");
-            var board = new Board();
+            var board = new ChessBoard();
             board.Setup(setupParts);
-            RunBoardCloneTest(board, 1000000);
+            Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent");
+            int mode = GetChoice(new[] { 1, 2 });
+            IAgent? agent = mode == 2 ? new SimpleAgent() : null;
             bool whitesTurn = true;
             while (true)
             {
                 board.PrintBoard();
-                IEnumerable<BoardPiece> currentPieces;
-                if (whitesTurn)
-                {
-                    Console.WriteLine("It's White's turn.");
-                    currentPieces = board.WhitePieces;
-                }
-                else
-                {
-                    Console.WriteLine("It's Black's turn.");
-                    currentPieces = board.BlackPieces;
-                }
+
                 if (EndGame.IsGameOver(board, out string? message))
                 {
                     Console.WriteLine(message);
                     break;
                 }
-                var chosenPiece = PickPiece(board, currentPieces);
-                if (chosenPiece == null)
+
+                if (whitesTurn || mode == 1)
                 {
-                    if (EndGame.IsGameOver(board, out message))
+                    var currentPieces = whitesTurn ? board.WhitePieces : board.BlackPieces;
+                    var chosenPiece = PickPiece(board, currentPieces);
+
+                    if (chosenPiece == null)
                     {
-                        Console.WriteLine(message);
+                        Console.WriteLine("No valid moves available. Game over!");
                         break;
                     }
-                    break;
+
+                    var possibleMoves = board.GetPossibleMoves(chosenPiece).ToArray();
+                    var chosenMove = PickMove(possibleMoves);
+
+                    if (chosenMove != null)
+                    {
+                        board.ExecuteMove(chosenMove);
+                        whitesTurn = !whitesTurn;
+                    }
                 }
-                var possibleMoves = board.GetPossibleMoves(chosenPiece).ToArray();
-                var chosenMove = PickMove(possibleMoves);
-                if (chosenMove != null)
+                else
                 {
-                    board.ExecuteMove(chosenMove);
-                    if (EndGame.IsGameOver(board, out message))
-                    {
-                        Console.WriteLine(message);
-                        break;
-                    }
+                    Console.WriteLine("Agent's turn...");
+                    var move = agent!.GetMove(board, whitesTurn);
+                    board.ExecuteMove(move);
                     whitesTurn = !whitesTurn;
                 }
+            }
+        }
+
+        static int GetChoice(int[] validChoices)
+        {
+            while (true)
+            {
+                Console.Write("Enter your choice: ");
+                if (int.TryParse(Console.ReadLine(), out int choice) && validChoices.Contains(choice))
+                {
+                    return choice;
+                }
+                Console.WriteLine("Invalid choice. Try again.");
             }
         }
 
@@ -67,11 +77,13 @@ namespace ChessBot
                 Console.WriteLine("No valid moves available.");
                 return null;
             }
+
             for (int i = 0; i < moves.Length; i++)
             {
                 var move = moves[i];
                 Console.WriteLine($"[{i}] {move.TargetFile}{(ushort)move.TargetRank} - {move.MoveCommand}");
             }
+
             while (true)
             {
                 Console.Write("Pick a valid move index: ");
@@ -85,14 +97,14 @@ namespace ChessBot
             }
         }
 
-
-        static BoardPiece? PickPiece(Board board, IEnumerable<BoardPiece> currentPieces)
+        static BoardPiece? PickPiece(ChessBoard board, IEnumerable<BoardPiece> currentPieces)
         {
             var piecesArray = currentPieces.ToArray();
             if (piecesArray.Length == 0)
             {
                 return null;
             }
+
             while (true)
             {
                 Console.WriteLine("Pick a piece with valid moves:");
@@ -102,12 +114,14 @@ namespace ChessBot
                     int moveCount = board.GetPossibleMoves(piece).Count();
                     Console.WriteLine($"[{i}] {piece.File}{(ushort)piece.Rank} - {moveCount} possible moves");
                 }
+
                 Console.Write("Enter piece index: ");
                 if (!int.TryParse(Console.ReadLine(), out var choice) || choice < 0 || choice >= piecesArray.Length)
                 {
                     Console.WriteLine("Invalid index. Try again.\n");
                     continue;
                 }
+
                 var chosenPiece = piecesArray[choice];
                 var chosenMoves = board.GetPossibleMoves(chosenPiece).ToArray();
                 if (chosenMoves.Length == 0)
@@ -116,27 +130,6 @@ namespace ChessBot
                     continue;
                 }
                 return chosenPiece;
-            }
-        }
-
-
-        static void RunBoardCloneTest(Board board, long numberOfClones)
-        {
-            Stopwatch sw = Stopwatch.StartNew();
-            HashSet<Board> cloneBoards = [];
-            for (int i = 1; i <= numberOfClones; i++)
-            {
-                var nBoard = board.Clone();
-                if (i % 1000 == 0)
-                {
-                    sw.Stop();
-                    cloneBoards.Add(nBoard);
-                    Console.Clear();
-                    Console.WriteLine($"Cloning board {numberOfClones} times");
-                    Console.WriteLine($"{sw.ElapsedMilliseconds} ms / {i} of {numberOfClones} / {sw.ElapsedMilliseconds / (decimal)i:0.00000} ms per clone");
-                    sw.Start();
-                }
-
             }
         }
     }

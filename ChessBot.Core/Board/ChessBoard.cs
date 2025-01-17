@@ -1,6 +1,6 @@
 ﻿namespace ChessBot.Core.Board
 {
-    public class Board
+    public class ChessBoard
     {
         #region Members
         private readonly ChessPiece[,] _board;
@@ -16,13 +16,13 @@
         #endregion
 
         #region Constructor / Copy
-        public Board()
+        public ChessBoard()
         {
             _board = new ChessPiece[8, 8];
         }
-        public Board Clone()
+        public ChessBoard Clone()
         {
-            var copy = new Board();
+            var copy = new ChessBoard();
             foreach (var bPiece in BlackPieces)
             {
                 copy.InitPiece(bPiece.Rank, bPiece.File, bPiece.ChessPiece, true);

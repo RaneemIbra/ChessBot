@@ -2,7 +2,7 @@
 {
     public static class PossibleMoves
     {
-        public static IEnumerable<Move> SingleMoves(Board board, BoardPiece piece)
+        public static IEnumerable<Move> SingleMoves(ChessBoard board, BoardPiece piece)
         {
             if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
             {
@@ -28,7 +28,7 @@
             }
         }
 
-        public static IEnumerable<Move> DoubleMove(Board board, BoardPiece piece)
+        public static IEnumerable<Move> DoubleMove(ChessBoard board, BoardPiece piece)
         {
             if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
             {
@@ -62,7 +62,7 @@
             }
         }
 
-        public static IEnumerable<Move> CapturingMove(Board board, BoardPiece piece)
+        public static IEnumerable<Move> CapturingMove(ChessBoard board, BoardPiece piece)
         {
             if (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black)
             {
@@ -96,7 +96,7 @@
             }
         }
 
-        public static IEnumerable<Move> EnPassent(Board board, BoardPiece piece)
+        public static IEnumerable<Move> EnPassent(ChessBoard board, BoardPiece piece)
         {
             if (board.LastMove == null ||
                 (piece.ChessPiece != ChessPiece.White && piece.ChessPiece != ChessPiece.Black))

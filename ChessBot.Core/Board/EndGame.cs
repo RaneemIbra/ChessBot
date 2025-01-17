@@ -2,11 +2,11 @@
 {
     public static class EndGame
     {
-        public static bool IsGameOver(Board board)
+        public static bool IsGameOver(ChessBoard board)
         {
             return IsGameOver(board, out _);
         }
-        public static bool IsGameOver(Board board, out string? message)
+        public static bool IsGameOver(ChessBoard board, out string? message)
         {
             if (board.NumOfBlackPieces == 0)
             {

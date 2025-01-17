@@ -2,7 +2,7 @@
 {
     public static class BoardManipulation
     {
-        public static BoardPiece MovePiece(Board board, BoardPiece piece, ChessRank targetRank, ChessFile targetFile)
+        public static BoardPiece MovePiece(ChessBoard board, BoardPiece piece, ChessRank targetRank, ChessFile targetFile)
         {
             RemovePiece(board, piece);
             var newPiece = new BoardPiece
@@ -15,7 +15,7 @@
             return newPiece;
         }
 
-        public static void RemovePiece(Board board, BoardPiece piece)
+        public static void RemovePiece(ChessBoard board, BoardPiece piece)
         {
             var occupant = board.GetPieceAt(piece.Rank, piece.File);
             if (occupant != null)
