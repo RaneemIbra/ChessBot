@@ -1,18 +1,28 @@
 ﻿using ChessBot.Core.Board;
 using ChessBot.Core.Agents;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace ChessBot
 {
     internal class Program
     {
-        const string DEFAULT_BOARD = "Wa2 Wb2 Wc2 Wd2 We2 Wf2 Wg2 Wh2 Ba7 Bb7 Bc7 Bd7 Be7 Bf7 Bg7 Bh7";
-
         static void Main(string[] args)
         {
-            var setupParts = DEFAULT_BOARD.Split(" ");
-            var board = new ChessBoard();
-            board.Setup(setupParts);
+            ChessBoard board = new ChessBoard();
+            Console.WriteLine("Enter setup command (e.g. Setup Wb1 Wb2 Bg6):");
+            string? SetupCommand = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(SetupCommand))
+            {
+                Console.WriteLine("Invalid setup command. Exiting.");
+                return;
+            }
+
+            if(!ParseSetupCommand(SetupCommand.Trim(), board)){
+                Console.WriteLine("Failed to setup board. Please try again with the correct format");
+                return;
+            }
+
             Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent, 3 for Agent vs Agent");
             int mode = GetChoice(new[] { 1, 2, 3});
             IAgent? WhiteAgent = null;
@@ -81,6 +91,21 @@ namespace ChessBot
             }
         }
 
+        static bool ParseSetupCommand(string? SetupCommand, ChessBoard board){
+            if(string.IsNullOrWhiteSpace(SetupCommand) || !SetupCommand.StartsWith("Setup ", StringComparison.OrdinalIgnoreCase)){
+                return false;
+            }
+            string[] parts = SetupCommand.Substring(6).Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            try{
+                board.ClearBoard();
+                board.Setup(parts);
+                return true;
+            }
+            catch{
+                Console.WriteLine("Failed to setup board. Please try again with the correct format");
+                return false;
+            }
+        }
         static void ExecutePlayerTurn(ChessBoard board, bool isWhiteTurn){
             var currentPieces = isWhiteTurn ? board.WhitePieces : board.BlackPieces;
             var chosenPiece = PickPiece(board, currentPieces);
