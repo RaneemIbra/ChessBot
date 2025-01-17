@@ -1,60 +1,59 @@
 ﻿using ChessBot.Core.Board;
 using ChessBot.Core.Agents;
+using ChessBot.Core;
 using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace ChessBot
 {
     internal class Program
     {
-        const string DEFAULT_BOARD = "Wa2 Wb2 Wc2 Wd2 We2 Wf2 Wg2 Wh2 Ba7 Bb7 Bc7 Bd7 Be7 Bf7 Bg7 Bh7";
-
         static void Main(string[] args)
         {
-            var setupParts = DEFAULT_BOARD.Split(" ");
-            var board = new ChessBoard();
-            board.Setup(setupParts);
-            Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent");
-            int mode = GetChoice(new[] { 1, 2 });
-            IAgent? agent = mode == 2 ? new SimpleAgent() : null;
-            bool whitesTurn = true;
-            while (true)
+            ChessBoard board = new ChessBoard();
+
+            Console.WriteLine("Enter setup command (e.g., Setup Wb1 Wb2 Bg6):");
+            string? setupCommand = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(setupCommand) || !ParseSetupCommand(setupCommand.Trim(), board))
             {
-                board.PrintBoard();
+                Console.WriteLine("Failed to setup board. Exiting.");
+                return;
+            }
 
-                if (EndGame.IsGameOver(board, out string? message))
+            Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent, 3 for Agent vs Agent");
+            int mode = GetChoice(new[] { 1, 2, 3 });
+
+            IAgent whitePlayer;
+            IAgent blackPlayer;
+
+            if (mode == 1)
+            {
+                whitePlayer = new HumanPlayer { Color = ChessColor.White };
+                blackPlayer = new HumanPlayer { Color = ChessColor.Black };
+            }
+            else if (mode == 2)
+            {
+                Console.WriteLine("Who plays as White? 1 for Player, 2 for Agent");
+                int choice = GetChoice(new[] { 1, 2 });
+                if (choice == 1)
                 {
-                    Console.WriteLine(message);
-                    break;
-                }
-
-                if (whitesTurn || mode == 1)
-                {
-                    var currentPieces = whitesTurn ? board.WhitePieces : board.BlackPieces;
-                    var chosenPiece = PickPiece(board, currentPieces);
-
-                    if (chosenPiece == null)
-                    {
-                        Console.WriteLine("No valid moves available. Game over!");
-                        break;
-                    }
-
-                    var possibleMoves = board.GetPossibleMoves(chosenPiece).ToArray();
-                    var chosenMove = PickMove(possibleMoves);
-
-                    if (chosenMove != null)
-                    {
-                        board.ExecuteMove(chosenMove);
-                        whitesTurn = !whitesTurn;
-                    }
+                    whitePlayer = new HumanPlayer { Color = ChessColor.White };
+                    blackPlayer = new SimpleAgent { Color = ChessColor.Black };
                 }
                 else
                 {
-                    Console.WriteLine("Agent's turn...");
-                    var move = agent!.GetMove(board, whitesTurn);
-                    board.ExecuteMove(move);
-                    whitesTurn = !whitesTurn;
+                    whitePlayer = new SimpleAgent { Color = ChessColor.White };
+                    blackPlayer = new HumanPlayer { Color = ChessColor.Black };
                 }
             }
+            else
+            {
+                whitePlayer = new SimpleAgent { Color = ChessColor.White };
+                blackPlayer = new SimpleAgent { Color = ChessColor.Black };
+            }
+
+            var game = new Game(board, whitePlayer, blackPlayer);
+            game.Run();
         }
 
         static int GetChoice(int[] validChoices)
@@ -70,66 +69,24 @@ namespace ChessBot
             }
         }
 
-        static Move? PickMove(Move[] moves)
+        static bool ParseSetupCommand(string? setupCommand, ChessBoard board)
         {
-            if (moves.Length == 0)
+            if (string.IsNullOrWhiteSpace(setupCommand) || !setupCommand.StartsWith("Setup ", StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine("No valid moves available.");
-                return null;
+                return false;
             }
 
-            for (int i = 0; i < moves.Length; i++)
+            string[] parts = setupCommand.Substring(6).Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            try
             {
-                var move = moves[i];
-                Console.WriteLine($"[{i}] {move.TargetFile}{(ushort)move.TargetRank} - {move.MoveCommand}");
+                board.ClearBoard();
+                board.Setup(parts);
+                return true;
             }
-
-            while (true)
+            catch
             {
-                Console.Write("Pick a valid move index: ");
-                if (!int.TryParse(Console.ReadLine(), out var moveIndex) ||
-                    moveIndex < 0 || moveIndex >= moves.Length)
-                {
-                    Console.WriteLine("Invalid index. Try again.");
-                    continue;
-                }
-                return moves[moveIndex];
-            }
-        }
-
-        static BoardPiece? PickPiece(ChessBoard board, IEnumerable<BoardPiece> currentPieces)
-        {
-            var piecesArray = currentPieces.ToArray();
-            if (piecesArray.Length == 0)
-            {
-                return null;
-            }
-
-            while (true)
-            {
-                Console.WriteLine("Pick a piece with valid moves:");
-                for (int i = 0; i < piecesArray.Length; i++)
-                {
-                    var piece = piecesArray[i];
-                    int moveCount = board.GetPossibleMoves(piece).Count();
-                    Console.WriteLine($"[{i}] {piece.File}{(ushort)piece.Rank} - {moveCount} possible moves");
-                }
-
-                Console.Write("Enter piece index: ");
-                if (!int.TryParse(Console.ReadLine(), out var choice) || choice < 0 || choice >= piecesArray.Length)
-                {
-                    Console.WriteLine("Invalid index. Try again.\n");
-                    continue;
-                }
-
-                var chosenPiece = piecesArray[choice];
-                var chosenMoves = board.GetPossibleMoves(chosenPiece).ToArray();
-                if (chosenMoves.Length == 0)
-                {
-                    Console.WriteLine("That piece has no valid moves. Please pick another piece.\n");
-                    continue;
-                }
-                return chosenPiece;
+                Console.WriteLine("Failed to setup board. Please try again with the correct format.");
+                return false;
             }
         }
     }

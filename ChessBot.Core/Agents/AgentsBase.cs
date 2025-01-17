@@ -9,20 +9,17 @@ namespace ChessBot.Core.Agents
 {
     public abstract class AgentsBase : IAgent
     {
-        public abstract Move GetMove(ChessBoard board, bool IsWhiteTurn);
-        protected IEnumerable<BoardPiece> GetCurrentPieces(ChessBoard board, bool IsWhiteTurn)
+        public ChessColor Color { get; set; }
+        public abstract Move GetMove(ChessBoard board);
+        protected IEnumerable<BoardPiece> GetCurrentPieces(ChessBoard board)
         {
-            return IsWhiteTurn ? board.WhitePieces : board.BlackPieces;
+            return Color == ChessColor.White ? board.WhitePieces : board.BlackPieces;
         }
         protected Move? PickRandomStupidMove(ChessBoard board, IEnumerable<BoardPiece> pieces)
         {
             var random = new Random();
-            var AllMoves = pieces.SelectMany(piece => board.GetPossibleMoves(piece)).ToList();
-            if (AllMoves.Count() == 0)
-            {
-                return null;
-            }
-            return AllMoves.ElementAt(random.Next(AllMoves.Count()));
+            var allMoves = pieces.SelectMany(piece => board.GetPossibleMoves(piece)).ToList();
+            return allMoves.Count == 0 ? null : allMoves[random.Next(allMoves.Count)];
         }
     }
 }
