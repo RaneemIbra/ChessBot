@@ -9,6 +9,7 @@ namespace ChessBot.Core.Agents
 {
     public interface IAgent
     {
-        Move GetMove(ChessBoard board, bool IsWhiteTurn);
+        ChessColor Color { get; set;}
+        Move GetMove(ChessBoard board);
     }
 }

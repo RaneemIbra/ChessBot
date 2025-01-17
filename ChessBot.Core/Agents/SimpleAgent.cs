@@ -9,9 +9,9 @@ namespace ChessBot.Core.Agents
 {
     public class SimpleAgent : AgentsBase
     {
-        public override Move GetMove(ChessBoard board, bool IsWhiteTurn)
+        public override Move GetMove(ChessBoard board)
         {
-            var pieces = GetCurrentPieces(board, IsWhiteTurn);
+            var pieces = GetCurrentPieces(board);
             return PickRandomStupidMove(board, pieces) ?? throw new InvalidOperationException("No valid moves");
         }
     }
