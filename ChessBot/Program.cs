@@ -38,18 +38,18 @@ namespace ChessBot
                 if (choice == 1)
                 {
                     whitePlayer = new HumanPlayer { Color = ChessColor.White };
-                    blackPlayer = new SimpleAgent { Color = ChessColor.Black };
+                    blackPlayer = new MinimaxAgent { Color = ChessColor.Black };
                 }
                 else
                 {
-                    whitePlayer = new SimpleAgent { Color = ChessColor.White };
+                    whitePlayer = new MinimaxAgent { Color = ChessColor.White };
                     blackPlayer = new HumanPlayer { Color = ChessColor.Black };
                 }
             }
             else
             {
-                whitePlayer = new SimpleAgent { Color = ChessColor.White };
-                blackPlayer = new SimpleAgent { Color = ChessColor.Black };
+                whitePlayer = new SimpleAgent { Color = ChessColor.Black };
+                blackPlayer = new MinimaxAgent { Color = ChessColor.White };
             }
 
             var game = new Game(board, whitePlayer, blackPlayer);
