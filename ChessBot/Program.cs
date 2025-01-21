@@ -1,8 +1,6 @@
 ﻿using ChessBot.Core.Board;
 using ChessBot.Core.Agents;
 using ChessBot.Core;
-using System.Diagnostics;
-using System.Security.Cryptography;
 
 namespace ChessBot
 {
@@ -19,6 +17,10 @@ namespace ChessBot
                 Console.WriteLine("Failed to setup board. Exiting.");
                 return;
             }
+
+            Console.Write("Enter White's total time in minutes (default 5): ");
+            int timeForAgentsInMinutes = 1;
+            if (int.TryParse(Console.ReadLine(), out int tmp1)) timeForAgentsInMinutes = tmp1;
 
             Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent, 3 for Agent vs Agent");
             int mode = GetChoice(new[] { 1, 2, 3 });
@@ -38,21 +40,21 @@ namespace ChessBot
                 if (choice == 1)
                 {
                     whitePlayer = new HumanPlayer { Color = ChessColor.White };
-                    blackPlayer = new MinimaxAgent { Color = ChessColor.Black };
+                    blackPlayer = new MinimaxAgent(6) { Color = ChessColor.Black };
                 }
                 else
                 {
-                    whitePlayer = new MinimaxAgent { Color = ChessColor.White };
+                    whitePlayer = new MinimaxAgent(6) { Color = ChessColor.White };
                     blackPlayer = new HumanPlayer { Color = ChessColor.Black };
                 }
             }
             else
             {
-                whitePlayer = new SimpleAgent { Color = ChessColor.Black };
-                blackPlayer = new MinimaxAgent { Color = ChessColor.White };
+                whitePlayer = new MinimaxAgent(8) { Color = ChessColor.White };
+                blackPlayer = new MinimaxAgent(6) { Color = ChessColor.Black };
             }
 
-            var game = new Game(board, whitePlayer, blackPlayer);
+            var game = new Game(board, whitePlayer, blackPlayer, timeForAgentsInMinutes);
             game.Run();
         }
 
