@@ -8,54 +8,58 @@ namespace ChessBot
     {
         static void Main(string[] args)
         {
-            ChessBoard board = new ChessBoard();
+            // ChessBoard board = new ChessBoard();
 
-            Console.WriteLine("Enter setup command (e.g., Setup Wb1 Wb2 Bg6):");
-            string? setupCommand = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(setupCommand) || !ParseSetupCommand(setupCommand.Trim(), board))
-            {
-                Console.WriteLine("Failed to setup board. Exiting.");
-                return;
-            }
+            // Console.WriteLine("Enter setup command (e.g., Setup Wb1 Wb2 Bg6):");
+            // string? setupCommand = Console.ReadLine();
+            // if (string.IsNullOrWhiteSpace(setupCommand) || !ParseSetupCommand(setupCommand.Trim(), board))
+            // {
+            //     Console.WriteLine("Failed to setup board. Exiting.");
+            //     return;
+            // }
 
-            Console.Write("Enter White's total time in minutes (default 5): ");
-            int timeForAgentsInMinutes = 1;
-            if (int.TryParse(Console.ReadLine(), out int tmp1)) timeForAgentsInMinutes = tmp1;
+            // Console.Write("Enter White's total time in minutes (default 5): ");
+            // int timeForAgentsInMinutes = 1;
+            // if (int.TryParse(Console.ReadLine(), out int tmp1)) timeForAgentsInMinutes = tmp1;
 
-            Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent, 3 for Agent vs Agent");
-            int mode = GetChoice(new[] { 1, 2, 3 });
+            // Console.WriteLine("Choose mode: 1 for Player vs Player, 2 for Player vs Agent, 3 for Agent vs Agent");
+            // int mode = GetChoice(new[] { 1, 2, 3 });
 
-            IAgent whitePlayer;
-            IAgent blackPlayer;
+            // IAgent whitePlayer;
+            // IAgent blackPlayer;
 
-            if (mode == 1)
-            {
-                whitePlayer = new HumanPlayer { Color = ChessColor.White };
-                blackPlayer = new HumanPlayer { Color = ChessColor.Black };
-            }
-            else if (mode == 2)
-            {
-                Console.WriteLine("Who plays as White? 1 for Player, 2 for Agent");
-                int choice = GetChoice(new[] { 1, 2 });
-                if (choice == 1)
-                {
-                    whitePlayer = new HumanPlayer { Color = ChessColor.White };
-                    blackPlayer = new MinimaxAgent(6) { Color = ChessColor.Black };
-                }
-                else
-                {
-                    whitePlayer = new MinimaxAgent(6) { Color = ChessColor.White };
-                    blackPlayer = new HumanPlayer { Color = ChessColor.Black };
-                }
-            }
-            else
-            {
-                whitePlayer = new MinimaxAgent(8) { Color = ChessColor.White };
-                blackPlayer = new MinimaxAgent(7) { Color = ChessColor.Black };
-            }
+            // if (mode == 1)
+            // {
+            //     whitePlayer = new HumanPlayer { Color = ChessColor.White };
+            //     blackPlayer = new HumanPlayer { Color = ChessColor.Black };
+            // }
+            // else if (mode == 2)
+            // {
+            //     Console.WriteLine("Who plays as White? 1 for Player, 2 for Agent");
+            //     int choice = GetChoice(new[] { 1, 2 });
+            //     if (choice == 1)
+            //     {
+            //         whitePlayer = new HumanPlayer { Color = ChessColor.White };
+            //         blackPlayer = new MinimaxAgent(6) { Color = ChessColor.Black };
+            //     }
+            //     else
+            //     {
+            //         whitePlayer = new MinimaxAgent(6) { Color = ChessColor.White };
+            //         blackPlayer = new HumanPlayer { Color = ChessColor.Black };
+            //     }
+            // }
+            // else
+            // {
+            //     whitePlayer = new MinimaxAgent(8) { Color = ChessColor.White };
+            //     blackPlayer = new MinimaxAgent(7) { Color = ChessColor.Black };
+            // }
 
-            var game = new Game(board, whitePlayer, blackPlayer, timeForAgentsInMinutes);
-            game.Run();
+            // var game = new Game(board, whitePlayer, blackPlayer, timeForAgentsInMinutes);
+            // game.Run();
+            IAgent agent = new MinimaxAgent(5);
+            
+            var client = new TcpGameClient("127.0.0.1", 9999, agent);
+            client.Start();
         }
 
         static int GetChoice(int[] validChoices)
