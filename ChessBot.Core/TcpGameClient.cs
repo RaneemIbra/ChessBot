@@ -14,6 +14,7 @@ namespace ChessBot.Core
         private readonly ChessBoard _board;
         private readonly IAgent _agent;
         private ChessColor _assignedColor;
+        private bool _ready;
 
         public TcpGameClient(string ip, int port, IAgent agent)
         {
@@ -26,8 +27,6 @@ namespace ChessBot.Core
         public void Start()
         {
             Console.WriteLine("Connected to server!");
-            SendResponse("OK");
-            
             while (true)
             {
                 string serverMessage = ReadMessage();
@@ -35,56 +34,39 @@ namespace ChessBot.Core
 
                 Console.WriteLine($"Server: {serverMessage}");
 
-                if (serverMessage.StartsWith("Setup"))
+                if (serverMessage.StartsWith("ASSIGN"))
                 {
-                    HandleSetupCommand(serverMessage);
+                    _assignedColor = serverMessage.Contains("White") ? ChessColor.White : ChessColor.Black;
                     SendResponse("OK");
                 }
-                else if (serverMessage.StartsWith("Time"))
+                else if (serverMessage.StartsWith("TIME"))
                 {
+                    //MakeAgentMove();
+                    Console.WriteLine("Time here");
                     SendResponse("OK");
                 }
-                else if (serverMessage.StartsWith("Begin"))
-                {
-                    _assignedColor = ChessColor.White;
-                    MakeFirstMove();
+                else if(serverMessage.StartsWith("SETUP")){
+                    Console.WriteLine("Setup Complete");
+                    SendResponse("OK");
                 }
-                else if (serverMessage.StartsWith("Black"))
-                {
-                    _assignedColor = ChessColor.Black;
-                }
-                else if (serverMessage.StartsWith("White"))
-                {
-                    _assignedColor = ChessColor.White;
+                else if(serverMessage.StartsWith("BEGIN")){
+                    Console.WriteLine("Game began");
+                    SendResponse("OK");
                 }
                 else if (IsMoveCommand(serverMessage))
                 {
+                    Console.WriteLine("Client moves");
                     HandleOpponentMove(serverMessage);
-                    MakeAgentMove();
                 }
-                else if (serverMessage == "exit")
+                else if (serverMessage == "EXIT")
                 {
+                    Console.WriteLine("Exit!");
                     break;
                 }
             }
 
             _stream.Close();
             _client.Close();
-        }
-
-        private void HandleSetupCommand(string setupCommand)
-        {
-            string[] parts = setupCommand.Split(' ');
-            _board.ClearBoard();
-            _board.Setup(parts[1..]);
-        }
-
-        private void MakeFirstMove()
-        {
-            if (_assignedColor == ChessColor.White)
-            {
-                MakeAgentMove();
-            }
         }
 
         private void MakeAgentMove()
@@ -97,7 +79,7 @@ namespace ChessBot.Core
 
         private void HandleOpponentMove(string moveNotation)
         {
-            var move = NotationHelper.FromNotation(moveNotation, _board, 
+            var move = NotationHelper.FromNotation(moveNotation, _board,
                 _assignedColor == ChessColor.White ? ChessColor.Black : ChessColor.White);
             if (move != null)
             {
@@ -120,10 +102,10 @@ namespace ChessBot.Core
 
         private static bool IsMoveCommand(string input)
         {
-            return input.Length == 4 && 
-                char.IsLetter(input[0]) && 
-                char.IsDigit(input[1]) && 
-                char.IsLetter(input[2]) && 
+            return input.Length == 4 &&
+                char.IsLetter(input[0]) &&
+                char.IsDigit(input[1]) &&
+                char.IsLetter(input[2]) &&
                 char.IsDigit(input[3]);
         }
     }
