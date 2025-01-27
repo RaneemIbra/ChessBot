@@ -14,8 +14,6 @@ namespace ChessBot.Core
         private readonly ChessBoard _board;
         private readonly IAgent _agent;
         private ChessColor _assignedColor;
-        private bool _ready;
-
         public TcpGameClient(string ip, int port, IAgent agent)
         {
             _client = new TcpClient(ip, port);
@@ -45,18 +43,29 @@ namespace ChessBot.Core
                     Console.WriteLine("Time here");
                     SendResponse("OK");
                 }
-                else if(serverMessage.StartsWith("SETUP")){
+                else if(serverMessage.StartsWith("Setup")){
+                    ParseSetupCommand(serverMessage.Trim(),_board);
                     Console.WriteLine("Setup Complete");
+                    _board.PrintBoard();
                     SendResponse("OK");
                 }
                 else if(serverMessage.StartsWith("BEGIN")){
                     Console.WriteLine("Game began");
                     SendResponse("OK");
                 }
-                else if (IsMoveCommand(serverMessage))
-                {
-                    Console.WriteLine("Client moves");
-                    HandleOpponentMove(serverMessage);
+                // else if (IsMoveCommand(serverMessage))
+                // {
+                //     Console.WriteLine("Client moves");
+                //     HandleOpponentMove(serverMessage);
+                // }
+                else if(serverMessage.Equals("MOVE")){
+                    Console.WriteLine(serverMessage);
+                    MakeAgentMove();
+                }
+                else if(serverMessage.StartsWith("MOVE")){
+                    Console.WriteLine(serverMessage);
+                    string move = "a7a6";
+                    HandleOpponentMove(move);
                 }
                 else if (serverMessage == "EXIT")
                 {
@@ -75,6 +84,7 @@ namespace ChessBot.Core
             string moveNotation = NotationHelper.ToNotation(move);
             SendResponse(moveNotation);
             _board.ExecuteMove(move);
+            _board.PrintBoard();
         }
 
         private void HandleOpponentMove(string moveNotation)
@@ -85,6 +95,8 @@ namespace ChessBot.Core
             {
                 _board.ExecuteMove(move);
             }
+            SendResponse(moveNotation);
+            _board.PrintBoard();
         }
 
         private string ReadMessage()
@@ -107,6 +119,27 @@ namespace ChessBot.Core
                 char.IsDigit(input[1]) &&
                 char.IsLetter(input[2]) &&
                 char.IsDigit(input[3]);
+        }
+
+        private bool ParseSetupCommand(string? setupCommand, ChessBoard board)
+        {
+            if (string.IsNullOrWhiteSpace(setupCommand) || !setupCommand.StartsWith("Setup ", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            string[] parts = setupCommand.Substring(6).Split(" ", StringSplitOptions.RemoveEmptyEntries);
+            try
+            {
+                board.ClearBoard();
+                board.Setup(parts);
+                return true;
+            }
+            catch
+            {
+                Console.WriteLine("Failed to setup board. Please try again with the correct format.");
+                return false;
+            }
         }
     }
 }

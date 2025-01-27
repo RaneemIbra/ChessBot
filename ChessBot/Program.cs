@@ -8,7 +8,7 @@ namespace ChessBot
     {
         static void Main(string[] args)
         {
-            ChessBoard board = new ChessBoard();
+            //ChessBoard board = new ChessBoard();
 
             // Console.WriteLine("Enter setup command (e.g., Setup Wb1 Wb2 Bg6):");
             // string? setupCommand = Console.ReadLine();
@@ -56,7 +56,7 @@ namespace ChessBot
 
             // var game = new Game(board, whitePlayer, blackPlayer, timeForAgentsInMinutes);
             // game.Run();
-            IAgent agent = new MinimaxAgent(8);
+            IAgent agent = new MinimaxAgent(5);
 
             var client = new TcpGameClient("127.0.0.1", 9999, agent);
             client.Start();
