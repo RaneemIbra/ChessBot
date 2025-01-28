@@ -34,43 +34,47 @@ namespace ChessBot.Core
 
                 if (serverMessage.StartsWith("ASSIGN"))
                 {
-                    _assignedColor = serverMessage.Contains("White") ? ChessColor.White : ChessColor.Black;
+                    _assignedColor = serverMessage.Contains("White") 
+                        ? ChessColor.White 
+                        : ChessColor.Black;
+                    _agent.Color = _assignedColor;
                     SendResponse("OK");
+                    continue;
                 }
                 else if (serverMessage.StartsWith("TIME"))
                 {
-                    //MakeAgentMove();
                     Console.WriteLine("Time here");
                     SendResponse("OK");
+                    continue;
                 }
                 else if(serverMessage.StartsWith("Setup")){
                     ParseSetupCommand(serverMessage.Trim(),_board);
                     Console.WriteLine("Setup Complete");
-                    _board.PrintBoard();
                     SendResponse("OK");
+                    continue;
                 }
                 else if(serverMessage.StartsWith("BEGIN")){
                     Console.WriteLine("Game began");
                     SendResponse("OK");
                 }
-                // else if (IsMoveCommand(serverMessage))
-                // {
-                //     Console.WriteLine("Client moves");
-                //     HandleOpponentMove(serverMessage);
-                // }
-                else if(serverMessage.Equals("MOVE")){
+                else if(serverMessage.Equals("move")){
                     Console.WriteLine(serverMessage);
                     MakeAgentMove();
-                }
-                else if(serverMessage.StartsWith("MOVE")){
-                    Console.WriteLine(serverMessage);
-                    string move = "a7a6";
-                    HandleOpponentMove(move);
                 }
                 else if (serverMessage == "EXIT")
                 {
                     Console.WriteLine("Exit!");
                     break;
+                }
+                else if(serverMessage.StartsWith("MOVE")){
+                    Console.WriteLine(serverMessage);
+                    string[] parts = serverMessage.Substring(5).Split(" ", StringSplitOptions.RemoveEmptyEntries);
+                    Console.WriteLine("parts: " + parts[0]);
+                    HandleOpponentMove(parts[0]);
+                    _board.PrintBoard();
+                }
+                else{
+                    Console.WriteLine("Hello from the other side");
                 }
             }
 
@@ -84,19 +88,18 @@ namespace ChessBot.Core
             string moveNotation = NotationHelper.ToNotation(move);
             SendResponse(moveNotation);
             _board.ExecuteMove(move);
-            _board.PrintBoard();
         }
 
         private void HandleOpponentMove(string moveNotation)
         {
-            var move = NotationHelper.FromNotation(moveNotation, _board,
-                _assignedColor == ChessColor.White ? ChessColor.Black : ChessColor.White);
-            if (move != null)
-            {
+            ChessColor opponentColor = _assignedColor == ChessColor.White 
+                ? ChessColor.Black 
+                : ChessColor.White;
+            var move = NotationHelper.FromNotation(moveNotation, _board, opponentColor);
+            if(move != null){
                 _board.ExecuteMove(move);
             }
-            SendResponse(moveNotation);
-            _board.PrintBoard();
+            SendResponse("OK");
         }
 
         private string ReadMessage()
