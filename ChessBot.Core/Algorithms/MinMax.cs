@@ -25,6 +25,20 @@ namespace ChessBot.Core.Algorithms
             int alpha,
             int beta)
         {
+            ulong hash = board.ComputeZobristHash();
+            if (TranspositionTable.TryGet(hash, depth, out var ttEntry))
+            {
+                if (ttEntry.Flag == TTFlag.Exact)
+                    return (null, ttEntry.Evaluation);
+                if (ttEntry.Flag == TTFlag.LowerBound)
+                    alpha = Math.Max(alpha, ttEntry.Evaluation);
+                else if (ttEntry.Flag == TTFlag.UpperBound)
+                    beta = Math.Min(beta, ttEntry.Evaluation);
+
+                if (alpha >= beta)
+                    return (null, ttEntry.Evaluation);
+            }
+
             if (depth == 0 || EndGame.IsGameOver(board))
             {
                 int eval = EvaluateBoard(board, colorToOptimize);
@@ -42,9 +56,10 @@ namespace ChessBot.Core.Algorithms
             }
 
             bool isMaximizing = (currentColor == colorToOptimize);
-
             Move? bestMove = null;
             int bestValue = isMaximizing ? int.MinValue : int.MaxValue;
+
+            int originalAlpha = alpha;
 
             foreach (var move in possibleMoves)
             {
@@ -52,7 +67,6 @@ namespace ChessBot.Core.Algorithms
                 boardClone.ExecuteMove(move);
 
                 var nextColor = (currentColor == ChessColor.White) ? ChessColor.Black : ChessColor.White;
-
                 var (_, value) = MinimaxWithAlphaBeta(
                     boardClone,
                     colorToOptimize,
@@ -85,8 +99,18 @@ namespace ChessBot.Core.Algorithms
                     break;
             }
 
+            TTFlag flag;
+            if (bestValue <= originalAlpha)
+                flag = TTFlag.UpperBound;
+            else if (bestValue >= beta)
+                flag = TTFlag.LowerBound;
+            else
+                flag = TTFlag.Exact;
+
+            TranspositionTable.Store(hash, depth, bestValue, flag);
             return (bestMove, bestValue);
         }
+
 
         private static int EvaluateBoard(ChessBoard board, ChessColor color)
         {
@@ -112,7 +136,7 @@ namespace ChessBot.Core.Algorithms
                 ? whiteScore - blackScore 
                 : blackScore - whiteScore;
         }
-
+        
         private static bool IsPassedPawn(BoardPiece pawn, ChessBoard board, ChessColor color)
         {
             int direction = color == ChessColor.White ? 1 : -1;
