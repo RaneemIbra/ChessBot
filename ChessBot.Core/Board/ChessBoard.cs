@@ -1,4 +1,6 @@
-﻿namespace ChessBot.Core.Board
+﻿using ChessBot.Core.Algorithms;
+
+namespace ChessBot.Core.Board
 {
     public class ChessBoard
     {
@@ -96,6 +98,22 @@
         public void Setup(IEnumerable<string> setupParts)
         {
             BoardInitializer.Setup(this, setupParts);
+        }
+
+        public ulong ComputeZobristHash()
+        {
+            ulong hash = 0;
+            foreach (var piece in _pieces)
+            {
+                if (piece.ChessPiece == ChessPiece.Empty)
+                    continue;
+
+                int rankIndex = piece.Rank.ToIndex();
+                int fileIndex = piece.File.ToIndex();
+                int pieceIndex = (int)piece.ChessPiece;
+                hash ^= Zobrist.Table[rankIndex, fileIndex, pieceIndex];
+            }
+            return hash;
         }
 
         public void ExecuteMove(Move move)
