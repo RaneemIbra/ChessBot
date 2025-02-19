@@ -4,15 +4,23 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ChessBot.Core.Board;
+using ChessBot.Core.Algorithms;
 
 namespace ChessBot.Core.Agents
 {
-    public class SimpleAgent : AgentsBase
+    public class SimpleAgent : IAgent
     {
-        public override Move GetMove(ChessBoard board)
+        public ChessColor Color { get; set; }
+        private readonly int _searchDepth;
+
+        public SimpleAgent(int searchDepth = 5)
         {
-            var pieces = GetCurrentPieces(board);
-            return PickRandomStupidMove(board, pieces) ?? throw new InvalidOperationException("No valid moves");
+            _searchDepth = searchDepth;
+        }
+
+        public Move GetMove(ChessBoard board)
+        {
+            return MinMax2.GetBestMove(board, Color, _searchDepth);
         }
     }
 }

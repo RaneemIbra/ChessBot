@@ -14,6 +14,10 @@ namespace ChessBot.Core.Algorithms
                 alpha: int.MinValue,
                 beta: int.MaxValue
             );
+
+            int whiteEval = EvaluateBoard(board, ChessColor.White);
+            int blackEval = EvaluateBoard(board, ChessColor.Black);
+            Console.WriteLine($"After move: {bestMove}, White Evaluation: {whiteEval}, Black Evaluation: {blackEval}");
             return bestMove ?? throw new InvalidOperationException("No valid moves found");
         }
 
@@ -25,18 +29,18 @@ namespace ChessBot.Core.Algorithms
             int alpha,
             int beta)
         {
-            ulong hash = board.ComputeZobristHash();
+            ulong hash = board.ComputeZobristHash(colorToOptimize);
             if (TranspositionTable.TryGet(hash, depth, out var ttEntry))
             {
                 if (ttEntry.Flag == TTFlag.Exact)
-                    return (null, ttEntry.Evaluation);
+                    return (ttEntry.BestMove, ttEntry.Evaluation);
                 if (ttEntry.Flag == TTFlag.LowerBound)
                     alpha = Math.Max(alpha, ttEntry.Evaluation);
                 else if (ttEntry.Flag == TTFlag.UpperBound)
                     beta = Math.Min(beta, ttEntry.Evaluation);
 
                 if (alpha >= beta)
-                    return (null, ttEntry.Evaluation);
+                    return (ttEntry.BestMove, ttEntry.Evaluation);
             }
 
             if (depth == 0 || EndGame.IsGameOver(board))
@@ -107,36 +111,108 @@ namespace ChessBot.Core.Algorithms
             else
                 flag = TTFlag.Exact;
 
-            TranspositionTable.Store(hash, depth, bestValue, flag);
+            TranspositionTable.Store(hash, depth, bestValue, flag, bestMove);
             return (bestMove, bestValue);
         }
 
 
         private static int EvaluateBoard(ChessBoard board, ChessColor color)
         {
+            // If the game is over, return a huge score.
+            // (Assuming you have a way to determine who won via EndGame.GetWinner)
+            if (EndGame.IsGameOver(board))
+            {
+                var winner = EndGame.GetWinner(board);
+                if (winner == ChessColor.none)
+                    return 0; // Draw
+
+                // We subtract (or add) the current ply depth so that a win in fewer moves is better.
+                // (Make sure your depth is passed in from your search if you want to do this.)
+                if (winner == color)
+                    return int.MaxValue - 1; // winning board
+                else
+                    return int.MinValue + 1; // losing board
+            }
+
             int whiteScore = 0;
             int blackScore = 0;
 
+            // Evaluate White pawns.
             foreach (var w in board.WhitePieces)
             {
-                whiteScore += 10;                    
-                whiteScore += (int)w.Rank*2;
-                if (IsPassedPawn(w, board, ChessColor.White)) whiteScore += 15;
-                if (IsPawnBlocked(w, board, ChessColor.White)) whiteScore -= 5;
+                // Base value for having a pawn.
+                whiteScore += 10;
+                // Reward advancing the pawn (the higher the rank, the better).
+                whiteScore += (int)w.Rank * 2;
+
+                // Already existing bonus for passed pawns.
+                if (IsPassedPawn(w, board, ChessColor.White))
+                    whiteScore += 15;
+                // Penalize blocked pawns.
+                if (IsPawnBlocked(w, board, ChessColor.White))
+                    whiteScore -= 5;
+
+                // **** NEW: Winning potential bonus ****
+                // Calculate moves remaining until the pawn wins (i.e. reaches rank 8).
+                int movesToPromotion = 8 - (int)w.Rank;
+
+                // If the pawn is unblocked along its file (or already passed), assume it has a clear path.
+                // You might want to refine this check.
+                bool clearPath = true;
+                // Check every square between current rank+1 and rank 8.
+                for (int r = (int)w.Rank + 1; r <= 8; r++)
+                {
+                    if (board.GetPieceAt((ChessRank)r, w.File) != null)
+                    {
+                        clearPath = false;
+                        break;
+                    }
+                }
+
+                // If the pawn is passed and has a clear path,
+                // give a bonus that increases as it gets closer to promotion.
+                if (clearPath && movesToPromotion <= 3)
+                {
+                    // For example, if movesToPromotion == 1, bonus = 90; if 2, bonus = 60; if 3, bonus = 30.
+                    whiteScore += (4 - movesToPromotion) * 30;
+                }
             }
+
+            // Evaluate Black pawns.
             foreach (var b in board.BlackPieces)
             {
                 blackScore += 10;
-                blackScore += (8 - (int)b.Rank)*2;
-                if (IsPassedPawn(b, board, ChessColor.Black)) blackScore += 15;
-                if (IsPawnBlocked(b, board, ChessColor.Black)) blackScore -= 5;
+                // For black, the further the pawn is from rank 1 the better it is.
+                blackScore += (8 - (int)b.Rank) * 2;
+
+                if (IsPassedPawn(b, board, ChessColor.Black))
+                    blackScore += 15;
+                if (IsPawnBlocked(b, board, ChessColor.Black))
+                    blackScore -= 5;
+
+                // **** NEW: Winning potential bonus for Black ****
+                int movesToPromotion = (int)b.Rank - 1;
+                bool clearPath = true;
+                for (int r = (int)b.Rank - 1; r >= 1; r--)
+                {
+                    if (board.GetPieceAt((ChessRank)r, b.File) != null)
+                    {
+                        clearPath = false;
+                        break;
+                    }
+                }
+                if (clearPath && movesToPromotion <= 3)
+                {
+                    blackScore += (4 - movesToPromotion) * 30;
+                }
             }
 
-            return (color == ChessColor.White) 
-                ? whiteScore - blackScore 
+            // Return the evaluation from the perspective of the given color.
+            return (color == ChessColor.White)
+                ? whiteScore - blackScore
                 : blackScore - whiteScore;
         }
-        
+
         private static bool IsPassedPawn(BoardPiece pawn, ChessBoard board, ChessColor color)
         {
             int direction = color == ChessColor.White ? 1 : -1;

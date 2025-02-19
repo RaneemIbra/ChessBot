@@ -100,7 +100,7 @@ namespace ChessBot.Core.Board
             BoardInitializer.Setup(this, setupParts);
         }
 
-        public ulong ComputeZobristHash()
+        public ulong ComputeZobristHash(ChessColor sideToMove)
         {
             ulong hash = 0;
             foreach (var piece in _pieces)
@@ -113,8 +113,11 @@ namespace ChessBot.Core.Board
                 int pieceIndex = (int)piece.ChessPiece;
                 hash ^= Zobrist.Table[rankIndex, fileIndex, pieceIndex];
             }
+
+            hash ^= sideToMove == ChessColor.White ? Zobrist.WhiteToMove : Zobrist.BlackToMove;
             return hash;
         }
+
 
         public void ExecuteMove(Move move)
         {
