@@ -41,5 +41,18 @@
             message = null;
             return false;
         }
+        
+        public static ChessColor GetWinner(ChessBoard board)
+        {
+            if (board.NumOfBlackPieces == 0 || board.WhitePieces.Any(piece => piece.Rank == ChessRank.Eight) || !board.BlackPieces.Any(piece => board.GetPossibleMoves(piece).Any()))
+            {
+                return ChessColor.White;
+            }
+            if (board.NumOfWhitePieces == 0 || board.BlackPieces.Any(piece => piece.Rank == ChessRank.One) || !board.WhitePieces.Any(piece => board.GetPossibleMoves(piece).Any()))
+            {
+                return ChessColor.Black;
+            }
+            throw new InvalidOperationException("The game is not over yet.");
+        }
     }
 }

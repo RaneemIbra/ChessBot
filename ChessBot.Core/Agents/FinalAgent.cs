@@ -1,21 +1,21 @@
 using ChessBot.Core.Board;
-using ChessBot.Core.Algorithms;
+using ChessBot.Core.Algorithms.Search;
 
 namespace ChessBot.Core.Agents
 {
-    public class MinimaxAgent : IAgent
+    public class FinalAgent : IAgent
     {
         public ChessColor Color { get; set; }
         private readonly int _searchDepth;
 
-        public MinimaxAgent(int searchDepth = 5)
+        public FinalAgent(int searchDepth = 5)
         {
             _searchDepth = searchDepth;
         }
 
         public Move GetMove(ChessBoard board)
         {
-            return Minimax.GetBestMove(board, Color, _searchDepth);
+            return IterativeDeepeningSearch.GetBestMove(board, Color, _searchDepth);
         }
     }
 }

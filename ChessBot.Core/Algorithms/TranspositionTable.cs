@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using ChessBot.Core.Board;
 
 namespace ChessBot.Core.Algorithms
 {
@@ -15,6 +16,7 @@ namespace ChessBot.Core.Algorithms
         public int Depth { get; set; }
         public int Evaluation { get; set; }
         public TTFlag Flag { get; set; }
+        public Move? BestMove { get; set; }
     }
 
     public static class TranspositionTable
@@ -34,13 +36,14 @@ namespace ChessBot.Core.Algorithms
             return false;
         }
 
-        public static void Store(ulong hash, int depth, int evaluation, TTFlag flag)
+        public static void Store(ulong hash, int depth, int evaluation, TTFlag flag, Move? bestMove)
         {
             TTEntry entry = new TTEntry
             {
                 Depth = depth,
                 Evaluation = evaluation,
-                Flag = flag
+                Flag = flag,
+                BestMove = bestMove
             };
             _table[hash] = entry;
         }

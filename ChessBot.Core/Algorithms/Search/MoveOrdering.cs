@@ -1,0 +1,39 @@
+using ChessBot.Core.Board;
+
+namespace ChessBot.Core.Algorithms.Search
+{
+    public static class MoveOrdering
+    {
+        public static List<Move> OrderMoves(List<Move> moves, ChessBoard board, ChessColor sideToMove)
+        {
+            return moves.Select(move =>
+                {
+                    int score = 0;
+                    if (move.CapturedPiece != null)
+                        score += 1000;
+                    int rankDiff = 0;
+                    if (move.MovingPiece.ChessPiece == ChessPiece.White)
+                        rankDiff = (int)move.TargetRank - (int)move.MovingPiece.Rank;
+                    else if (move.MovingPiece.ChessPiece == ChessPiece.Black)
+                        rankDiff = (int)move.MovingPiece.Rank - (int)move.TargetRank;
+                    score += rankDiff * 10;
+                    return new { move, score };
+                })
+                .OrderByDescending(x => x.score)
+                .Select(x => x.move)
+                .ToList();
+        }
+
+        public static List<Move> GenerateCaptureMoves(ChessBoard board, ChessColor sideToMove)
+        {
+            List<Move> captureMoves = new List<Move>();
+            IEnumerable<BoardPiece> pieces = sideToMove == ChessColor.White ? board.WhitePieces : board.BlackPieces;
+            foreach (var piece in pieces)
+            {
+                var moves = board.GetPossibleMoves(piece).Where(m => m.CapturedPiece != null);
+                captureMoves.AddRange(moves);
+            }
+            return captureMoves;
+        }
+    }
+}

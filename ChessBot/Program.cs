@@ -40,23 +40,23 @@ namespace ChessBot
                 if (choice == 1)
                 {
                     whitePlayer = new HumanPlayer { Color = ChessColor.White };
-                    blackPlayer = new MinimaxAgent(7) { Color = ChessColor.Black };
+                    blackPlayer = new FinalAgent(10) { Color = ChessColor.Black };
                 }
                 else
                 {
-                    whitePlayer = new MinimaxAgent(7) { Color = ChessColor.White };
+                    whitePlayer = new FinalAgent(10) { Color = ChessColor.White };
                     blackPlayer = new HumanPlayer { Color = ChessColor.Black };
                 }
             }
             else
             {
-                whitePlayer = new MinimaxAgent(6) { Color = ChessColor.White };
-                blackPlayer = new MinimaxAgent(7) { Color = ChessColor.Black };
+                whitePlayer = new FinalAgent(11) { Color = ChessColor.White };
+                blackPlayer = new SimpleAgent(11) { Color = ChessColor.Black };
             }
 
             var game = new Game(board, whitePlayer, blackPlayer, timeForAgentsInMinutes);
             game.Run();
-            // IAgent agent = new MinimaxAgent(5);
+            // IAgent agent = new FinalAgent(11);
 
             // var client = new TcpGameClient("127.0.0.1", 9999, agent);
             // client.Start();
