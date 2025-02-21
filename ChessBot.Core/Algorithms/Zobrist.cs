@@ -5,7 +5,6 @@ namespace ChessBot.Core.Algorithms
     public static class Zobrist
     {
         public static readonly ulong[,,] Table;
-        // Add two extra values: one for white to move and one for black to move.
         public static readonly ulong WhiteToMove;
         public static readonly ulong BlackToMove;
 

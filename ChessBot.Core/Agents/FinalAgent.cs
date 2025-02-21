@@ -1,5 +1,5 @@
 using ChessBot.Core.Board;
-using ChessBot.Core.Algorithms;
+using ChessBot.Core.Algorithms.Search;
 
 namespace ChessBot.Core.Agents
 {
@@ -15,7 +15,7 @@ namespace ChessBot.Core.Agents
 
         public Move GetMove(ChessBoard board)
         {
-            return FinalAlgorithm.GetBestMove(board, Color, _searchDepth);
+            return IterativeDeepeningSearch.GetBestMove(board, Color, _searchDepth);
         }
     }
 }

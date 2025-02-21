@@ -56,7 +56,7 @@ namespace ChessBot
 
             var game = new Game(board, whitePlayer, blackPlayer, timeForAgentsInMinutes);
             game.Run();
-            // IAgent agent = new MinimaxAgent(5);
+            // IAgent agent = new FinalAgent(11);
 
             // var client = new TcpGameClient("127.0.0.1", 9999, agent);
             // client.Start();
