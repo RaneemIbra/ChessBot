@@ -7,7 +7,8 @@ namespace ChessBot.Core.Algorithms.Search
     {
         private const int INF = 1000000;
         
-        public static int AlphaBeta(ChessBoard board, int depth, int alpha, int beta, ChessColor rootColor, ChessColor sideToMove, out Move bestMove)
+        public static int AlphaBeta(ChessBoard board, int depth, int alpha, int beta, 
+            ChessColor rootColor, ChessColor sideToMove, int ply, out Move bestMove)
         {
             bestMove = null!;
             ulong hash = board.ComputeZobristHash(sideToMove);
@@ -33,9 +34,18 @@ namespace ChessBot.Core.Algorithms.Search
                 }
             }
 
+            if (EndGame.IsGameOver(board, out _))
+            {
+                ChessColor winner = EndGame.GetWinner(board);
+                if (winner == rootColor)
+                    return INF - ply;
+                else
+                    return -INF + ply;
+            }
+
             if (depth == 0)
             {
-                return Quiescence(board, alpha, beta, rootColor, sideToMove);
+                return Quiescence(board, alpha, beta, rootColor, sideToMove, ply);
             }
 
             List<Move> moves = new List<Move>();
@@ -60,7 +70,7 @@ namespace ChessBot.Core.Algorithms.Search
                 {
                     ChessBoard child = board.Clone();
                     child.ExecuteMove(move);
-                    int score = AlphaBeta(child, depth - 1, alpha, beta, rootColor, Opponent(sideToMove), out _);
+                    int score = AlphaBeta(child, depth - 1, alpha, beta, rootColor, Opponent(sideToMove), ply + 1, out _);
                     if (score > value)
                     {
                         value = score;
@@ -83,7 +93,7 @@ namespace ChessBot.Core.Algorithms.Search
                 {
                     ChessBoard child = board.Clone();
                     child.ExecuteMove(move);
-                    int score = AlphaBeta(child, depth - 1, alpha, beta, rootColor, Opponent(sideToMove), out _);
+                    int score = AlphaBeta(child, depth - 1, alpha, beta, rootColor, Opponent(sideToMove), ply + 1, out _);
                     if (score < value)
                     {
                         value = score;
@@ -101,7 +111,8 @@ namespace ChessBot.Core.Algorithms.Search
             }
         }
 
-        private static int Quiescence(ChessBoard board, int alpha, int beta, ChessColor rootColor, ChessColor sideToMove)
+        private static int Quiescence(ChessBoard board, int alpha, int beta, 
+            ChessColor rootColor, ChessColor sideToMove, int ply)
         {
             int standPat = Evaluation.Evaluation.EvaluateBoard(board, rootColor);
             if (sideToMove == rootColor)
@@ -116,7 +127,7 @@ namespace ChessBot.Core.Algorithms.Search
                 {
                     ChessBoard child = board.Clone();
                     child.ExecuteMove(move);
-                    int score = Quiescence(child, alpha, beta, rootColor, Opponent(sideToMove));
+                    int score = Quiescence(child, alpha, beta, rootColor, Opponent(sideToMove), ply + 1);
                     alpha = Math.Max(alpha, score);
                     if (alpha >= beta)
                         return beta;
@@ -135,7 +146,7 @@ namespace ChessBot.Core.Algorithms.Search
                 {
                     ChessBoard child = board.Clone();
                     child.ExecuteMove(move);
-                    int score = Quiescence(child, alpha, beta, rootColor, Opponent(sideToMove));
+                    int score = Quiescence(child, alpha, beta, rootColor, Opponent(sideToMove), ply + 1);
                     beta = Math.Min(beta, score);
                     if (alpha >= beta)
                         return alpha;

@@ -16,11 +16,11 @@ namespace ChessBot.Core.Algorithms.Search
                 int alpha = scoreGuess - aspirationWindow;
                 int beta = scoreGuess + aspirationWindow;
                 Move currentBestMove;
-                int score = AlphaBetaSearch.AlphaBeta(board, depth, alpha, beta, rootColor, rootColor, out currentBestMove);
+                int score = AlphaBetaSearch.AlphaBeta(board, depth, alpha, beta, rootColor, rootColor, 0, out currentBestMove);
                 
                 if (score <= alpha || score >= beta)
                 {
-                    score = AlphaBetaSearch.AlphaBeta(board, depth, -1000000, 1000000, rootColor, rootColor, out currentBestMove);
+                    score = AlphaBetaSearch.AlphaBeta(board, depth, -1000000, 1000000, rootColor, rootColor, 0, out currentBestMove);
                 }
                 scoreGuess = score;
                 bestMove = currentBestMove;
