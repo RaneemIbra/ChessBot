@@ -59,14 +59,13 @@ namespace ChessBot.Core.Algorithms.Search
                 return Evaluation.Evaluation.EvaluateBoard(board, rootColor);
             }
 
-            moves = MoveOrdering.OrderMoves(moves, board, sideToMove);
+            var orderedMoves = MoveOrdering.OrderMoves(moves, board, sideToMove);
             int originalAlpha = alpha;
             Move? bestLocalMove = null;
-            
             if (sideToMove == rootColor)
             {
                 int value = -INF;
-                foreach (var move in moves)
+                foreach (var move in orderedMoves)
                 {
                     ChessBoard child = board.Clone();
                     child.ExecuteMove(move);
@@ -89,7 +88,7 @@ namespace ChessBot.Core.Algorithms.Search
             else
             {
                 int value = INF;
-                foreach (var move in moves)
+                foreach (var move in orderedMoves)
                 {
                     ChessBoard child = board.Clone();
                     child.ExecuteMove(move);
@@ -121,7 +120,7 @@ namespace ChessBot.Core.Algorithms.Search
                     return beta;
                 if (alpha < standPat)
                     alpha = standPat;
-                List<Move> captureMoves = MoveOrdering.GenerateCaptureMoves(board, sideToMove);
+                IEnumerable<Move> captureMoves = MoveOrdering.GenerateCaptureMoves(board, sideToMove);
                 captureMoves = MoveOrdering.OrderMoves(captureMoves, board, sideToMove);
                 foreach (var move in captureMoves)
                 {
@@ -140,7 +139,7 @@ namespace ChessBot.Core.Algorithms.Search
                     return alpha;
                 if (beta > standPat)
                     beta = standPat;
-                List<Move> captureMoves = MoveOrdering.GenerateCaptureMoves(board, sideToMove);
+                IEnumerable<Move> captureMoves = MoveOrdering.GenerateCaptureMoves(board, sideToMove);
                 captureMoves = MoveOrdering.OrderMoves(captureMoves, board, sideToMove);
                 foreach (var move in captureMoves)
                 {
