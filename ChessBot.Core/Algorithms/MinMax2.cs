@@ -183,7 +183,7 @@ namespace ChessBot.Core.Algorithms
             IEnumerable<BoardPiece> pieces = sideToMove == ChessColor.White ? board.WhitePieces : board.BlackPieces;
             foreach (var piece in pieces)
             {
-                var moves = board.GetPossibleMoves(piece).Where(m => m.CapturedPiece != null);
+                var moves = PossibleMoves.CapturingMove(board, piece);
                 captureMoves.AddRange(moves);
             }
             return captureMoves;

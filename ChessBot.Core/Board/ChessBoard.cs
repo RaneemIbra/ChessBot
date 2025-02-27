@@ -1,4 +1,6 @@
 ﻿using ChessBot.Core.Algorithms;
+using System.Collections.Immutable;
+using System.Collections.ObjectModel;
 
 namespace ChessBot.Core.Board
 {
@@ -6,15 +8,14 @@ namespace ChessBot.Core.Board
     {
         #region Members
         private readonly ChessPiece[,] _board;
-        private readonly List<BoardPiece> _pieces = [];
         #endregion
 
         #region Properties
-        public IEnumerable<BoardPiece> BlackPieces => _pieces.Where(w => w.ChessPiece == ChessPiece.Black);
-        public IEnumerable<BoardPiece> WhitePieces => _pieces.Where(w => w.ChessPiece == ChessPiece.White);
+        public List<BoardPiece> BlackPieces { get; private set; } = new List<BoardPiece>(8);
+        public List<BoardPiece> WhitePieces { get; private set; } = new List<BoardPiece>(8);
         public Move? LastMove { get; private set; }
-        public int NumOfBlackPieces => BlackPieces.Count();
-        public int NumOfWhitePieces => WhitePieces.Count();
+        public int NumOfBlackPieces => BlackPieces.Count;
+        public int NumOfWhitePieces => WhitePieces.Count;
         #endregion
 
         #region Constructor / Copy
@@ -79,6 +80,15 @@ namespace ChessBot.Core.Board
                 this[rank.ToIndex(), file.ToIndex()] = value;
             }
         }
+
+        public bool HasPossibleMove(BoardPiece boardPiece)
+        {
+            return PossibleMoves.SingleMoves(this, boardPiece).Any() ||
+                PossibleMoves.DoubleMove(this, boardPiece).Any() ||
+                PossibleMoves.CapturingMove(this, boardPiece).Any() ||
+                PossibleMoves.EnPassent(this, boardPiece).Any();
+        }
+
         public IEnumerable<Move> GetPossibleMoves(BoardPiece boardPiece)
         {
             return
@@ -92,7 +102,9 @@ namespace ChessBot.Core.Board
 
         public BoardPiece? GetPieceAt(ChessRank rank, ChessFile file)
         {
-            return _pieces.SingleOrDefault(a => a.Rank == rank && a.File == file);
+
+            return WhitePieces.SingleOrDefault(a => a.Rank == rank && a.File == file) 
+                ?? BlackPieces.SingleOrDefault(a => a.Rank == rank && a.File == file);
         }
 
         public void Setup(IEnumerable<string> setupParts)
@@ -103,7 +115,7 @@ namespace ChessBot.Core.Board
         public ulong ComputeZobristHash(ChessColor sideToMove)
         {
             ulong hash = 0;
-            foreach (var piece in _pieces)
+            foreach (var piece in BlackPieces.Concat(WhitePieces))
             {
                 if (piece.ChessPiece == ChessPiece.Empty)
                     continue;
@@ -169,43 +181,56 @@ namespace ChessBot.Core.Board
         #endregion
 
         #region Private Helpers
-        internal void AddPiece(BoardPiece piece)
+        internal void AddPiece(BoardPiece piece, bool unsafeInit = false)
         {
-            var occupant = GetPieceAt(piece.Rank, piece.File);
-            if (occupant != null)
+            if (!unsafeInit)
             {
-                _pieces.Remove(occupant);
+                var occupant = GetPieceAt(piece.Rank, piece.File);
+                if (occupant != null)
+                {
+                    RemovePiece(occupant);
+                }
             }
-            _pieces.Add(piece);
+            if(piece.ChessPiece == ChessPiece.White)
+            {
+                WhitePieces.Add(piece);
+            }
+            else
+            {
+                BlackPieces.Add(piece);
+            }
             this[piece.Rank, piece.File] = piece.ChessPiece;
         }
 
         internal void RemovePiece(BoardPiece piece)
         {
-            var occupant = GetPieceAt(piece.Rank, piece.File);
-            if (occupant != null)
+            if(piece.ChessPiece == ChessPiece.White)
             {
-                _pieces.Remove(occupant);
-                this[piece.Rank, piece.File] = ChessPiece.Empty;
+                WhitePieces.Remove(piece);
             }
+            else
+            {
+                BlackPieces.Remove(piece);
+            }
+            this[piece.Rank, piece.File] = ChessPiece.Empty;
         }
 
         internal void InitPiece(ChessRank rank, ChessFile file, ChessPiece piece, bool unsafeInit = false)
         {
             if (!unsafeInit)
             {
-                var existing = _pieces.FirstOrDefault(a => a.Rank == rank && a.File == file);
+                var existing = GetPieceAt(rank, file);
                 // Check if the piece is valid
                 if (existing != null)
                 {
                     // ... we could also throw an exception here, init shoult not be called with nonsense
-                    _pieces.Remove(existing);
+                    RemovePiece(existing);
                 }
             }
             if (piece != ChessPiece.Empty)
             {
                 var boardPiece = new BoardPiece { File = file, Rank = rank, ChessPiece = piece };
-                _pieces.Add(boardPiece);
+                AddPiece(boardPiece, unsafeInit);
             }
             this[rank, file] = piece;
         }

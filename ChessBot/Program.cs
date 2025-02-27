@@ -51,7 +51,7 @@ namespace ChessBot
             else
             {
                 whitePlayer = new FinalAgent(12) { Color = ChessColor.White };
-                blackPlayer = new SimpleAgent(9) { Color = ChessColor.Black };
+                blackPlayer = new FinalAgent(12) { Color = ChessColor.Black };
             }
 
             var game = new Game(board, whitePlayer, blackPlayer, timeForAgentsInMinutes);

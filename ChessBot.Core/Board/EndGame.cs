@@ -1,4 +1,6 @@
-﻿namespace ChessBot.Core.Board
+﻿using System.IO.Pipelines;
+
+namespace ChessBot.Core.Board
 {
     public static class EndGame
     {
@@ -18,24 +20,40 @@
                 message = "Game Over! Black wins - No white pawns left.";
                 return true;
             }
-            if (board.WhitePieces.Any(piece => piece.Rank == ChessRank.Eight))
+            bool hasPossibleMove = false;
+            foreach (var piece in board.WhitePieces)
             {
-                message = "Game Over! White wins - White pawn reached the last rank.";
-                return true;
+                if (piece.Rank == ChessRank.Eight)
+                {
+                    message = "Game Over! White wins - White pawn reached the last rank.";
+                    return true;
+                }
+                if (!hasPossibleMove)
+                {
+                    hasPossibleMove |= board.HasPossibleMove(piece);
+                }
             }
-            if (board.BlackPieces.Any(piece => piece.Rank == ChessRank.One))
-            {
-                message = "Game Over! Black wins - Black pawn reached the last rank.";
-                return true;
-            }
-            if (!board.BlackPieces.Any(piece => board.GetPossibleMoves(piece).Any()))
-            {
-                message = "Game Over! White wins - Black has no valid moves left.";
-                return true;
-            }
-            if (!board.WhitePieces.Any(piece => board.GetPossibleMoves(piece).Any()))
+            if(!hasPossibleMove)
             {
                 message = "Game Over! Black wins - White has no valid moves left.";
+                return true;
+            }
+            hasPossibleMove = false;
+            foreach (var piece in board.BlackPieces)
+            {
+                if (piece.Rank == ChessRank.One)
+                {
+                    message = "Game Over! Black wins - Black pawn reached the last rank.";
+                    return true;
+                }
+                if (!hasPossibleMove)
+                {
+                    hasPossibleMove |= board.HasPossibleMove(piece);
+                }
+            }
+            if (!hasPossibleMove)
+            {
+                message = "Game Over! White wins - Black has no valid moves left.";
                 return true;
             }
             message = null;
@@ -44,11 +62,11 @@
         
         public static ChessColor GetWinner(ChessBoard board)
         {
-            if (board.NumOfBlackPieces == 0 || board.WhitePieces.Any(piece => piece.Rank == ChessRank.Eight) || !board.BlackPieces.Any(piece => board.GetPossibleMoves(piece).Any()))
+            if (board.NumOfBlackPieces == 0 || board.WhitePieces.Any(piece => piece.Rank == ChessRank.Eight) || !board.BlackPieces.Any(piece => board.HasPossibleMove(piece)))
             {
                 return ChessColor.White;
             }
-            if (board.NumOfWhitePieces == 0 || board.BlackPieces.Any(piece => piece.Rank == ChessRank.One) || !board.WhitePieces.Any(piece => board.GetPossibleMoves(piece).Any()))
+            if (board.NumOfWhitePieces == 0 || board.BlackPieces.Any(piece => piece.Rank == ChessRank.One) || !board.WhitePieces.Any(piece => board.HasPossibleMove(piece)))
             {
                 return ChessColor.Black;
             }
