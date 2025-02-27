@@ -36,6 +36,19 @@ namespace ChessBot.Core
 
                 IAgent currentPlayer = whitesTurn ? _whitePlayer : _blackPlayer;
 
+                int moveTimeAllocatedMilliseconds;
+                if (whitesTurn)
+                    moveTimeAllocatedMilliseconds = (int)(_whiteTimeLeft.TotalMilliseconds / 10);
+                else
+                    moveTimeAllocatedMilliseconds = (int)(_blackTimeLeft.TotalMilliseconds / 10);
+
+                Console.WriteLine($"Time allocated for move: {moveTimeAllocatedMilliseconds / 1000.0:F2} seconds");
+
+                if (currentPlayer is FinalAgent fa)
+                {
+                    fa.MoveTimeLimitInMilliSeconds = moveTimeAllocatedMilliseconds;
+                }
+
                 var stopwatch = Stopwatch.StartNew();
                 Console.WriteLine($"{(whitesTurn ? "White" : "Black")}'s turn.");
 

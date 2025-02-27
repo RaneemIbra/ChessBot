@@ -7,7 +7,7 @@ namespace ChessBot.Core.Algorithms.Search
         public static IEnumerable<Move> OrderMoves(IEnumerable<Move> moves, ChessBoard board, ChessColor sideToMove)
         {
             return moves.OrderByDescending(move =>                   
-                    {
+                {
                     int score = 0;
                     if (move.CapturedPiece != null)
                         score += 1000;
@@ -18,7 +18,7 @@ namespace ChessBot.Core.Algorithms.Search
                         rankDiff = (int)move.MovingPiece.Rank - (int)move.TargetRank;
                     score += rankDiff * 10;
                     return score ;
-                    });        
+                });        
         }
 
         public static List<Move> GenerateCaptureMoves(ChessBoard board, ChessColor sideToMove)

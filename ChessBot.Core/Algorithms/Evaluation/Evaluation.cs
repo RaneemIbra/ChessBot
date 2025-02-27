@@ -15,7 +15,7 @@ namespace ChessBot.Core.Algorithms.Evaluation
                 ChessColor winner = EndGame.GetWinner(board);
                 return (winner == rootColor) ? INF - 1 : -INF + 1;
             }
-            
+
             var pb = GetPawnBitboards(board);
             int whitePawnCount = BitOperations.PopCount(pb.WhitePawns);
             int blackPawnCount = BitOperations.PopCount(pb.BlackPawns);
@@ -31,7 +31,7 @@ namespace ChessBot.Core.Algorithms.Evaluation
             int passedBonusWhite = EvaluatePassedPawnBonus(pb.WhitePawns, pb.BlackPawns, true);
             int passedBonusBlack = EvaluatePassedPawnBonus(pb.BlackPawns, pb.WhitePawns, false);
             int centerControlScore = EvaluateCenterControl(pb);
-            
+
             int score = centerControlScore + materialScore + whiteAdvancement - blackAdvancement + mobilityScore + (passedBonusWhite - passedBonusBlack);
             return rootColor == ChessColor.White ? score : -score;
         }
@@ -62,7 +62,7 @@ namespace ChessBot.Core.Algorithms.Evaluation
                 pawns &= pawns - 1;
                 int rank = idx / 8;
                 int file = idx % 8;
-                
+
                 ulong mask = 0UL;
                 if (isWhite)
                 {
@@ -88,7 +88,7 @@ namespace ChessBot.Core.Algorithms.Evaluation
                         }
                     }
                 }
-                
+
                 if ((enemyPawns & mask) == 0)
                 {
                     bool clearPath = true;
