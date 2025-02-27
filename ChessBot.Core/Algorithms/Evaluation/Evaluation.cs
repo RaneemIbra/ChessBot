@@ -15,7 +15,7 @@ namespace ChessBot.Core.Algorithms.Evaluation
                 ChessColor winner = EndGame.GetWinner(board);
                 return (winner == rootColor) ? INF - 1 : -INF + 1;
             }
-            
+
             var pb = GetPawnBitboards(board);
             int whitePawnCount = BitOperations.PopCount(pb.WhitePawns);
             int blackPawnCount = BitOperations.PopCount(pb.BlackPawns);
@@ -30,9 +30,25 @@ namespace ChessBot.Core.Algorithms.Evaluation
             int mobilityScore = (whiteMobility - blackMobility) * 10;
             int passedBonusWhite = EvaluatePassedPawnBonus(pb.WhitePawns, pb.BlackPawns, true);
             int passedBonusBlack = EvaluatePassedPawnBonus(pb.BlackPawns, pb.WhitePawns, false);
-            
-            int score = materialScore + whiteAdvancement - blackAdvancement + mobilityScore + (passedBonusWhite - passedBonusBlack);
+            int centerControlScore = EvaluateCenterControl(pb);
+
+            int score = centerControlScore + materialScore + whiteAdvancement - blackAdvancement + mobilityScore + (passedBonusWhite - passedBonusBlack);
             return rootColor == ChessColor.White ? score : -score;
+        }
+
+        private static int EvaluateCenterControl(PawnBitboards pb)
+        {
+            ulong centerMask = (1UL << 27) | (1UL << 28) | (1UL << 35) | (1UL << 36);
+
+            int whiteOccupiedBonus = BitOperations.PopCount(pb.WhitePawns & centerMask) * 25;
+            ulong whitePotential = ((pb.WhitePawns & ~BitboardHelper.FileA) << 7) | ((pb.WhitePawns & ~BitboardHelper.FileH) << 9);
+            int whitePotentialBonus = BitOperations.PopCount(whitePotential & centerMask) * 10;
+
+            int blackOccupiedBonus = BitOperations.PopCount(pb.BlackPawns & centerMask) * 25;
+            ulong blackPotential = ((pb.BlackPawns & ~BitboardHelper.FileA) >> 9) | ((pb.BlackPawns & ~BitboardHelper.FileH) >> 7);
+            int blackPotentialBonus = BitOperations.PopCount(blackPotential & centerMask) * 10;
+
+            return (whiteOccupiedBonus + whitePotentialBonus) - (blackOccupiedBonus + blackPotentialBonus);
         }
 
         private static int EvaluatePassedPawnBonus(ulong ownPawns, ulong enemyPawns, bool isWhite)
@@ -46,7 +62,7 @@ namespace ChessBot.Core.Algorithms.Evaluation
                 pawns &= pawns - 1;
                 int rank = idx / 8;
                 int file = idx % 8;
-                
+
                 ulong mask = 0UL;
                 if (isWhite)
                 {
@@ -72,7 +88,7 @@ namespace ChessBot.Core.Algorithms.Evaluation
                         }
                     }
                 }
-                
+
                 if ((enemyPawns & mask) == 0)
                 {
                     bool clearPath = true;

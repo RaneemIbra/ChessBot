@@ -4,9 +4,9 @@ namespace ChessBot.Core.Algorithms.Search
 {
     public static class MoveOrdering
     {
-        public static List<Move> OrderMoves(List<Move> moves, ChessBoard board, ChessColor sideToMove)
+        public static IEnumerable<Move> OrderMoves(IEnumerable<Move> moves, ChessBoard board, ChessColor sideToMove)
         {
-            return moves.Select(move =>
+            return moves.OrderByDescending(move =>                   
                 {
                     int score = 0;
                     if (move.CapturedPiece != null)
@@ -17,11 +17,8 @@ namespace ChessBot.Core.Algorithms.Search
                     else if (move.MovingPiece.ChessPiece == ChessPiece.Black)
                         rankDiff = (int)move.MovingPiece.Rank - (int)move.TargetRank;
                     score += rankDiff * 10;
-                    return new { move, score };
-                })
-                .OrderByDescending(x => x.score)
-                .Select(x => x.move)
-                .ToList();
+                    return score ;
+                });        
         }
 
         public static List<Move> GenerateCaptureMoves(ChessBoard board, ChessColor sideToMove)
