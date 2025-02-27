@@ -30,14 +30,25 @@ namespace ChessBot.Core.Algorithms.Evaluation
             int mobilityScore = (whiteMobility - blackMobility) * 10;
             int passedBonusWhite = EvaluatePassedPawnBonus(pb.WhitePawns, pb.BlackPawns, true);
             int passedBonusBlack = EvaluatePassedPawnBonus(pb.BlackPawns, pb.WhitePawns, false);
+            int centerControlScore = EvaluateCenterControl(pb);
             
-            int score = materialScore + whiteAdvancement - blackAdvancement + mobilityScore + (passedBonusWhite - passedBonusBlack);
-
-            int centerControlScore = EvaluateCenterControl(board);
-            int pawnProtectionScore = EvaluatePawnProtection(board);
-            score += centerControlScore + pawnProtectionScore;
-
+            int score = centerControlScore + materialScore + whiteAdvancement - blackAdvancement + mobilityScore + (passedBonusWhite - passedBonusBlack);
             return rootColor == ChessColor.White ? score : -score;
+        }
+
+        private static int EvaluateCenterControl(PawnBitboards pb)
+        {
+            ulong centerMask = (1UL << 27) | (1UL << 28) | (1UL << 35) | (1UL << 36);
+
+            int whiteOccupiedBonus = BitOperations.PopCount(pb.WhitePawns & centerMask) * 25;
+            ulong whitePotential = ((pb.WhitePawns & ~BitboardHelper.FileA) << 7) | ((pb.WhitePawns & ~BitboardHelper.FileH) << 9);
+            int whitePotentialBonus = BitOperations.PopCount(whitePotential & centerMask) * 10;
+
+            int blackOccupiedBonus = BitOperations.PopCount(pb.BlackPawns & centerMask) * 25;
+            ulong blackPotential = ((pb.BlackPawns & ~BitboardHelper.FileA) >> 9) | ((pb.BlackPawns & ~BitboardHelper.FileH) >> 7);
+            int blackPotentialBonus = BitOperations.PopCount(blackPotential & centerMask) * 10;
+
+            return (whiteOccupiedBonus + whitePotentialBonus) - (blackOccupiedBonus + blackPotentialBonus);
         }
 
         private static int EvaluatePassedPawnBonus(ulong ownPawns, ulong enemyPawns, bool isWhite)
@@ -113,119 +124,6 @@ namespace ChessBot.Core.Algorithms.Evaluation
             return bonus;
         }
 
-        private static bool IsCenter(ChessRank rank, ChessFile file){
-            return (rank == ChessRank.Four || rank == ChessRank.Five) &&
-                    (file == ChessFile.D || file == ChessFile.E);
-        }
-
-        private static int EvaluateCenterControl(ChessBoard board){
-            int whiteCenter = 0;
-            int blackCenter = 0;
-
-            foreach(var pawn in board.WhitePieces){
-                if(IsCenter(pawn.Rank, pawn.File)){
-                    whiteCenter += 25;
-                }
-                if(pawn.Rank != ChessRank.Eight){
-                    if(pawn.File != ChessFile.A){
-                        ChessRank targetRank = (ChessRank)(((int)pawn.Rank)+1);
-                        ChessFile targetFile = (ChessFile)(((int)pawn.File)-1);
-                        if(IsCenter(targetRank, targetFile)){
-                            whiteCenter += 10;
-                        }
-                    }
-                    if(pawn.File != ChessFile.H){
-                        ChessRank targetRank = (ChessRank)(((int)pawn.Rank)+1);
-                        ChessFile targetFile = (ChessFile)(((int)pawn.File)+1);
-                        if(IsCenter(targetRank, targetFile)){
-                            whiteCenter += 10;
-                        }
-                    }
-                }
-            }
-
-            foreach(var pawn in board.BlackPieces){
-                if(IsCenter(pawn.Rank, pawn.File)){
-                    whiteCenter += 25;
-                }
-                if(pawn.Rank != ChessRank.One){
-                    if(pawn.File != ChessFile.A){
-                        ChessRank targetRank = (ChessRank)(((int)pawn.Rank)-1);
-                        ChessFile targetFile = (ChessFile)(((int)pawn.File)-1);
-                        if(IsCenter(targetRank, targetFile)){
-                            whiteCenter += 10;
-                        }
-                    }
-                    if(pawn.File != ChessFile.H){
-                        ChessRank targetRank = (ChessRank)(((int)pawn.Rank)-1);
-                        ChessFile targetFile = (ChessFile)(((int)pawn.File)+1);
-                        if(IsCenter(targetRank, targetFile)){
-                            whiteCenter += 10;
-                        }
-                    }
-                }
-            }
-
-            return whiteCenter - blackCenter;
-        }
-
-        private static int EvaluatePawnProtection(ChessBoard board){
-            int whiteProtection = 0;
-            int blackProtection = 0;
-
-            foreach(var pawn in board.WhitePieces){
-                bool isProtected = false;
-                if(pawn.Rank != ChessRank.One){
-                    if(pawn.File != ChessFile.A){
-                        ChessRank defenderRank = (ChessRank)(((int)pawn.Rank) -1);
-                        ChessFile defenderFile = (ChessFile)(((int)pawn.File) -1);
-                        var defender = board.GetPieceAt(defenderRank, defenderFile);
-                        if(defender != null && defender.ChessPiece == ChessPiece.White){
-                            isProtected = true;
-                        }
-                    }
-                    if(!isProtected && pawn.File != ChessFile.H){
-                        ChessRank defenderRank = (ChessRank)(((int)pawn.Rank) - 1);
-                        ChessFile defenderFile = (ChessFile)(((int)pawn.File) + 1);
-                        var defender = board.GetPieceAt(defenderRank, defenderFile);
-                        if(defender != null && defender.ChessPiece == ChessPiece.White){
-                            isProtected = true;
-                        }
-                    }
-                }
-                if(isProtected){
-                    whiteProtection += 20;
-                }
-            }
-
-            foreach (var pawn in board.BlackPieces)
-            {
-                bool isProtected = false;
-                if (pawn.Rank != ChessRank.Eight)
-                {
-                    if (pawn.File != ChessFile.A)
-                    {
-                        ChessRank defenderRank = (ChessRank)(((int)pawn.Rank) + 1);
-                        ChessFile defenderFile = (ChessFile)(((int)pawn.File) - 1);
-                        var defender = board.GetPieceAt(defenderRank, defenderFile);
-                        if (defender != null && defender.ChessPiece == ChessPiece.Black)
-                            isProtected = true;
-                    }
-                    if (!isProtected && pawn.File != ChessFile.H)
-                    {
-                        ChessRank defenderRank = (ChessRank)(((int)pawn.Rank) + 1);
-                        ChessFile defenderFile = (ChessFile)(((int)pawn.File) + 1);
-                        var defender = board.GetPieceAt(defenderRank, defenderFile);
-                        if (defender != null && defender.ChessPiece == ChessPiece.Black)
-                            isProtected = true;
-                    }
-                }
-                if (isProtected)
-                    blackProtection += 20;
-            }
-
-            return whiteProtection - blackProtection;
-        }
         private static int EvaluateAdvancement(ulong pawnBitboard, bool isWhite)
         {
             int bonus = 0;
