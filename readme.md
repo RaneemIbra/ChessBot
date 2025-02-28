@@ -37,6 +37,8 @@ A C# AI agent designed for pawn-based strategy games. Features two operational m
 
 ## Usage Guide
 
+<font color = "red">Please Check the videos for a step by step tutorial on how to run the code<font>
+
 ### Server Connection Mode
 
 1. **Server Preparation**
