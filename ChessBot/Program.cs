@@ -8,6 +8,7 @@ namespace ChessBot
     {
         static void Main(string[] args)
         {
+            #region Local
             ChessBoard board = new ChessBoard();
 
             Console.WriteLine("Enter setup command (e.g., Setup Wb1 Wb2 Bg6):");
@@ -56,10 +57,14 @@ namespace ChessBot
 
             var game = new Game(board, whitePlayer, blackPlayer, timeForAgentsInMinutes);
             game.Run();
+            #endregion
+
+            #region Server
             //IAgent agent = new FinalAgent(11);
 
             //var client = new TcpGameClient("127.0.0.1", 9999, agent);
             //client.Start();
+            #endregion
         }
 
         static int GetChoice(int[] validChoices)
