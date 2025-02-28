@@ -7,23 +7,6 @@ Pawn Game Agent is a C# project that implements an AI agent for playing a game o
 
 Additionally, the complete source code is provided, allowing you to run the project directly from Visual Studio using the run button.
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Executable Files](#executable-files)
-  - [Running in Visual Studio](#running-in-visual-studio)
-- [Demo Videos](#demo-videos)
-- [Configuration](#configuration)
-- [Documentation](#documentation)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
-- [Acknowledgements](#acknowledgements)
-
 ## Overview
 
 Pawn Game Agent is designed to showcase a C# AI that plays the game of pawns. The project supports two modes of operation: a local play mode and a server-connected mode, offering flexibility for both casual play and competitive agent-versus-agent matches.
@@ -41,11 +24,3 @@ Pawn Game Agent is designed to showcase a C# AI that plays the game of pawns. Th
 
 - [Visual Studio](https://visualstudio.microsoft.com/) (any version that supports C#)
 - [.NET Framework or .NET Core](https://dotnet.microsoft.com/download) (depending on your project setup)
-
-## Installation
-
-1. **Clone or Download the Project**  
-   Download the project from the submission package or clone the repository:
-   ```bash
-   git clone https://github.com/yourusername/pawn-game-agent.git
-   ```
