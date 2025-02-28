@@ -31,20 +31,18 @@ A C# AI agent designed for pawn-based strategy games. Features two operational m
 ### Project Setup
 
 1. **Open Solution**
-   - Launch `PawnGameAgent.sln` in Visual Studio
-2. **Restore Dependencies**
-   - NuGet package restoration (automatic in most VS configurations)
+   - Launch `ChessBot.sln` in Visual Studio
 
 ## Usage Guide
 
-<font color ='red'> Please Check the videos for a step by step tutorial on how to run the code </font>
+#### Please Check the videos for a step by step tutorial on how to run the code
 
 ### Server Connection Mode
 
 1. **Server Preparation**
    - Ensure game server is running and listening
 2. **Launch Agent**
-   - Double-click `PawnGameAgent_Server.exe`
+   - Double-click `Agent_Server.exe`
 3. **Game Initialization**
    - Automatic server connection
    - Matches begin when opponent connects
@@ -52,7 +50,7 @@ A C# AI agent designed for pawn-based strategy games. Features two operational m
 ### Local Play Mode
 
 1. **Launch Executable**
-   - Run `PawnGameAgent_Local.exe`
+   - Run `Agent_Local.exe`
 2. **Initial Setup**
 
    ```shell
@@ -75,21 +73,19 @@ A C# AI agent designed for pawn-based strategy games. Features two operational m
 
 #### Visual Studio Users
 
-Click ▶️ Run button in IDE
+Click Run button in IDE
+
+If you want to play locally, comment out the server region in the program.cs and uncomment the local region
+
+If you want to connect the agent to the server, comment out the local region and uncomment the server region in the program.cs file
 
 Select startup project (Local/Server)
 
-Direct Execution
-
-Double-click respective .exe files
-
 Follow on-screen prompts
 
-📚 Additional Resources
+Additional Resources
 Included demonstration videos:
 
-local_play_demo.mp4
+LocalGame.mp4
 
-server_connection_demo.mp4
-
-Embedded gameplay rules documentation
+ServerGame.mp4
