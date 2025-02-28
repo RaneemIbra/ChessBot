@@ -4,6 +4,9 @@ using System.Collections.ObjectModel;
 
 namespace ChessBot.Core.Board
 {
+    /// <summary>
+    /// Represents the chessboard and manages the state of the game, including pieces, moves, and board manipulation.
+    /// </summary>
     public class ChessBoard
     {
         #region Members
@@ -11,18 +14,46 @@ namespace ChessBot.Core.Board
         #endregion
 
         #region Properties
+        /// <summary>
+        /// Gets the list of black pieces on the board.
+        /// </summary>
         public List<BoardPiece> BlackPieces { get; private set; } = new List<BoardPiece>(8);
+
+        /// <summary>
+        /// Gets the list of white pieces on the board.
+        /// </summary>
         public List<BoardPiece> WhitePieces { get; private set; } = new List<BoardPiece>(8);
+
+        /// <summary>
+        /// Gets the last move made on the board.
+        /// </summary>
         public Move? LastMove { get; private set; }
+
+        /// <summary>
+        /// Gets the number of black pieces on the board.
+        /// </summary>
         public int NumOfBlackPieces => BlackPieces.Count;
+
+        /// <summary>
+        /// Gets the number of white pieces on the board.
+        /// </summary>
         public int NumOfWhitePieces => WhitePieces.Count;
         #endregion
 
         #region Constructor / Copy
+
+        /// <summary>
+        /// Initializes a new chessboard with an empty 8x8 grid.
+        /// </summary>
         public ChessBoard()
         {
             _board = new ChessPiece[8, 8];
         }
+
+        /// <summary>
+        /// Creates a clone of the current chessboard.
+        /// </summary>
+        /// <returns>A new instance of the chessboard that is a copy of the current one.</returns>
         public ChessBoard Clone()
         {
             var copy = new ChessBoard();
@@ -40,6 +71,12 @@ namespace ChessBot.Core.Board
 
         #region Public interface
 
+        /// <summary>
+        /// Gets or sets a chess piece at a specified rank and file.
+        /// </summary>
+        /// <param name="rank">The rank (row) of the chess piece.</param>
+        /// <param name="file">The file (column) of the chess piece.</param>
+        /// <returns>The chess piece at the specified location.</returns>
         public ChessPiece this[int rank, int file]
         {
             get
@@ -69,6 +106,13 @@ namespace ChessBot.Core.Board
                 }
             }
         }
+
+        /// <summary>
+        /// Gets or sets a chess piece at a specified rank and file using <see cref="ChessRank"/> and <see cref="ChessFile"/>.
+        /// </summary>
+        /// <param name="rank">The rank (row) of the chess piece.</param>
+        /// <param name="file">The file (column) of the chess piece.</param>
+        /// <returns>The chess piece at the specified location.</returns>
         public ChessPiece this[ChessRank rank, ChessFile file]
         {
             get
@@ -81,6 +125,11 @@ namespace ChessBot.Core.Board
             }
         }
 
+        /// <summary>
+        /// Determines if the specified piece has any possible moves on the board.
+        /// </summary>
+        /// <param name="boardPiece">The piece to check for possible moves.</param>
+        /// <returns>True if the piece has any possible moves, false otherwise.</returns>
         public bool HasPossibleMove(BoardPiece boardPiece)
         {
             return PossibleMoves.SingleMoves(this, boardPiece).Any() ||
@@ -89,6 +138,11 @@ namespace ChessBot.Core.Board
                 PossibleMoves.EnPassent(this, boardPiece).Any();
         }
 
+        /// <summary>
+        /// Gets all the possible moves for the specified board piece.
+        /// </summary>
+        /// <param name="boardPiece">The board piece to check for possible moves.</param>
+        /// <returns>A collection of all possible moves for the piece.</returns>
         public IEnumerable<Move> GetPossibleMoves(BoardPiece boardPiece)
         {
             return
@@ -100,18 +154,32 @@ namespace ChessBot.Core.Board
             ];
         }
 
+        /// <summary>
+        /// Gets the piece at the specified rank and file.
+        /// </summary>
+        /// <param name="rank">The rank (row) of the square to check.</param>
+        /// <param name="file">The file (column) of the square to check.</param>
+        /// <returns>The piece at the specified square, or null if no piece exists there.</returns>
         public BoardPiece? GetPieceAt(ChessRank rank, ChessFile file)
         {
-
-            return WhitePieces.SingleOrDefault(a => a.Rank == rank && a.File == file) 
+            return WhitePieces.SingleOrDefault(a => a.Rank == rank && a.File == file)
                 ?? BlackPieces.SingleOrDefault(a => a.Rank == rank && a.File == file);
         }
 
+        /// <summary>
+        /// Sets up the board according to the provided setup string parts.
+        /// </summary>
+        /// <param name="setupParts">An enumeration of setup string parts defining piece positions.</param>
         public void Setup(IEnumerable<string> setupParts)
         {
             BoardInitializer.Setup(this, setupParts);
         }
 
+        /// <summary>
+        /// Computes the Zobrist hash of the current board state.
+        /// </summary>
+        /// <param name="sideToMove">The side to move (either White or Black).</param>
+        /// <returns>The Zobrist hash representing the board state.</returns>
         public ulong ComputeZobristHash(ChessColor sideToMove)
         {
             ulong hash = 0;
@@ -130,7 +198,10 @@ namespace ChessBot.Core.Board
             return hash;
         }
 
-
+        /// <summary>
+        /// Executes a move on the board, updating the board state.
+        /// </summary>
+        /// <param name="move">The move to execute.</param>
         public void ExecuteMove(Move move)
         {
             if (move.CapturedPiece != null)
@@ -145,6 +216,9 @@ namespace ChessBot.Core.Board
             }
         }
 
+        /// <summary>
+        /// Prints the current state of the board to the console in a human-readable format.
+        /// </summary>
         public void PrintBoard()
         {
             Console.WriteLine("   | A | B | C | D | E | F | G | H |");
@@ -167,13 +241,16 @@ namespace ChessBot.Core.Board
                             Console.Write(" B |");
                             break;
                     }
-
                 }
                 Console.Write($" {(ushort)rank} {Environment.NewLine}");
             }
             Console.WriteLine("   |-------------------------------|");
             Console.WriteLine("   | A | B | C | D | E | F | G | H |");
         }
+
+        /// <summary>
+        /// Clears the board by removing all pieces.
+        /// </summary>
         public void ClearBoard()
         {
             BoardInitializer.ClearBoard(this);
@@ -181,6 +258,12 @@ namespace ChessBot.Core.Board
         #endregion
 
         #region Private Helpers
+
+        /// <summary>
+        /// Adds a piece to the board at the specified location.
+        /// </summary>
+        /// <param name="piece">The piece to add.</param>
+        /// <param name="unsafeInit">Whether to allow overwriting an existing piece without validation.</param>
         internal void AddPiece(BoardPiece piece, bool unsafeInit = false)
         {
             if (!unsafeInit)
@@ -191,7 +274,7 @@ namespace ChessBot.Core.Board
                     RemovePiece(occupant);
                 }
             }
-            if(piece.ChessPiece == ChessPiece.White)
+            if (piece.ChessPiece == ChessPiece.White)
             {
                 WhitePieces.Add(piece);
             }
@@ -202,9 +285,13 @@ namespace ChessBot.Core.Board
             this[piece.Rank, piece.File] = piece.ChessPiece;
         }
 
+        /// <summary>
+        /// Removes a piece from the board.
+        /// </summary>
+        /// <param name="piece">The piece to remove.</param>
         internal void RemovePiece(BoardPiece piece)
         {
-            if(piece.ChessPiece == ChessPiece.White)
+            if (piece.ChessPiece == ChessPiece.White)
             {
                 WhitePieces.Remove(piece);
             }
@@ -215,6 +302,13 @@ namespace ChessBot.Core.Board
             this[piece.Rank, piece.File] = ChessPiece.Empty;
         }
 
+        /// <summary>
+        /// Initializes a piece on the board at the specified location.
+        /// </summary>
+        /// <param name="rank">The rank (row) of the piece.</param>
+        /// <param name="file">The file (column) of the piece.</param>
+        /// <param name="piece">The piece to initialize.</param>
+        /// <param name="unsafeInit">Whether to allow overwriting an existing piece without validation.</param>
         internal void InitPiece(ChessRank rank, ChessFile file, ChessPiece piece, bool unsafeInit = false)
         {
             if (!unsafeInit)
@@ -223,7 +317,7 @@ namespace ChessBot.Core.Board
                 // Check if the piece is valid
                 if (existing != null)
                 {
-                    // ... we could also throw an exception here, init shoult not be called with nonsense
+                    // ... we could also throw an exception here, init shouldn't be called with nonsense
                     RemovePiece(existing);
                 }
             }
